@@ -450,43 +450,6 @@
         padding-inline: 6px;
       }
     }
-    /* ——— Ticker/Aviso temporal ——— */
-    #ticker {
-      position: absolute;
-      top: calc(10px + var(--safe-top));
-      left: 0;
-      width: 100%;
-      z-index: 0;             /* detrás de los botones */
-      height: 34px;           /* altura similar a los botones */
-      display: flex;
-      align-items: center;    /* centra verticalmente el texto */
-      overflow: hidden;
-      pointer-events: none;   /* no captura clics */
-      padding-left: clamp(56px, 8vw, 120px);  /* deja hueco al botón de idioma */
-      padding-right: clamp(96px, 12vw, 180px);/* deja hueco a los botones de la derecha */
-    }
-    .ticker-inner {
-      display: inline-block;
-      white-space: nowrap;
-      animation-name: ticker-scroll;
-      animation-timing-function: linear;
-      animation-iteration-count: infinite;
-      animation-duration: 25s; /* fallback; se recalibra por JS */
-      animation-delay: -6s;    /* aparece enseguida antes de la calibración */
-      will-change: transform;
-      opacity: .9;
-    }
-    @keyframes ticker-scroll {
-      0%   { transform: translateX(100%); }
-      100% { transform: translateX(-100%); }
-    }
-    @media (prefers-reduced-motion: reduce){
-      .ticker-inner{ animation: none; }
-    }
-
-
-
-
     /* limpia el fondo y el padding de los hijos header/footer de .header-cloud */
     .header-cloud>header,
     .header-cloud>footer {
@@ -749,10 +712,6 @@
 <body>
   <!-- Contenedor de nubes (fondo dinámico) -->
   <div id="backgroundContainer"></div>
-  <div id="ticker" aria-live="polite">
-    <div class="ticker-inner"><span id="tickerText">…</span></div>
-  </div>
-
   <!-- Botón de idioma (arriba izq) -->
   <button id="toggleLang" aria-label="cambiar idioma">ES</button>
 
@@ -1025,8 +984,6 @@
       // 1) UTILIDADES
       // —————————————————————————
 
-      window.lastWeather = null;
-
       const qs = (sel) => document.querySelector(sel);
       const qsa = (sel) => Array.from(document.querySelectorAll(sel));
 
@@ -1074,29 +1031,10 @@
       const root = document.documentElement;
 
       // Orden nuevo: de claro a oscuro
-      const themes = [
-        'light',
-        'dark',
-        'cloud',
-        'darkCloud',
-        'lightRain',
-        'rain',
-        'storm',
-        'heat',
-        'snow',
-        'fog'
-      ];
+      const themes = ['light', 'dark'];
       const emojis = {
         light: '☀️',
-        dark: '🌙',
-        cloud: '🌤️',
-        darkCloud: '☁️',
-        lightRain: '🌧️',
-        rain: '⛈️',
-        storm: '⚡️',
-        heat: '🔥',
-        snow: '❄️',
-        fog: '🌫️'
+        dark: '🌙'
       };
 
       let currentThemeIndex = Math.max(0, themes.indexOf(root.getAttribute('data-theme')));
@@ -1105,7 +1043,6 @@
         root.setAttribute('data-theme', theme);
         themeBtn.textContent = emojis[theme] || '🎛️';
         currentThemeIndex = themes.indexOf(theme);
-        if (typeof updateTicker === 'function') updateTicker();
       }
 
       themeBtn.addEventListener('click', () => {
@@ -1114,98 +1051,59 @@
         applyTheme(nextTheme);
       });
 
-      /*para que el tema se decida segun el tiempo que haga en barna*/
-      document.addEventListener('DOMContentLoaded', () => {
-        const API_KEY = '990fd8edd33ce21c64a5173c1a482507'; // tu clave ya puesta :)
-        const lat = 41.3874;  // Latitud de Barcelona
-        const lon = 2.1686;   // Longitud de Barcelona
+      const CITY_TIMEZONE = 'Europe/Madrid';
+      const SUNLIGHT_DATA_URL = 'data/sunlight.json';
 
-        async function setThemeByBarcelonaWeather() {
-          try {
-            const res = await fetch(
-              `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`
-            );
-            const data = await res.json();
+      function getMadridNow() {
+        const formatter = new Intl.DateTimeFormat('en-CA', {
+          timeZone: CITY_TIMEZONE,
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        });
+        const parts = formatter.formatToParts(new Date()).reduce((acc, part) => {
+          if (part.type !== 'literal') acc[part.type] = part.value;
+          return acc;
+        }, {});
+        const isoDate = `${parts.year}-${parts.month}-${parts.day}`;
+        const localDate = new Date(Date.UTC(
+          Number(parts.year),
+          Number(parts.month) - 1,
+          Number(parts.day),
+          Number(parts.hour),
+          Number(parts.minute),
+          Number(parts.second)
+        ));
+        return { isoDate, localDate };
+      }
 
-            const weather = data.weather[0].main.toLowerCase();
-            const description = data.weather[0].description;
-            const cloudPercentage = data.clouds?.all || 0;
-            const temp = data.main.temp;
-            const hour = new Date().getHours();
-            const isNight = hour < 7 || hour >= 19;
-
-            console.log('⛅ Clima actual:', weather);
-            console.log('📝 Descripción:', description);
-            console.log('☁️ Porcentaje de nubes:', cloudPercentage);
-            console.log('🕒 Hora actual:', hour, '| Es de noche:', isNight);
-
-            let theme = 'dark'; // por defecto
-
-            // 1) Priorizar extremos térmicos
-            if (temp < 5) {
-              theme = 'snow';
-              console.log('te congelas', theme);
-            } else if (temp > 28) {
-              theme = 'heat';
-              console.log('te asas', theme);
-            }
-            // 2) Cielo despejado “normal”
-            else if (weather === 'clear') {
-              theme = isNight ? 'dark' : 'light';
-              console.log('es temprano o es tarde', theme);
-            }
-
-            else if (weather === 'clouds') {
-              if (cloudPercentage >= 60) {
-                theme = 'darkCloud';
-                console.log('mucha nube', theme);
-              } else if (cloudPercentage >= 30) {
-                theme = 'cloud';
-                console.log('poca nube', theme);
-              } else {
-                theme = isNight ? 'dark' : 'light';
-                console.log('es temprany o es tard', theme);
-              }
-            }
-
-            else if (weather === 'drizzle') {
-              theme = 'lightRain';
-              console.log('chispea', theme);
-            }
-            else if (weather === 'rain') {
-              theme = 'rain';
-              console.log('plou', theme);
-            }
-            else if (weather === 'thunderstorm') {
-              theme = 'storm';
-              console.log('com plou!!!', theme);
-            }
-
-            else if (weather === 'snow') {
-              theme = 'snow';
-              console.log('neva', theme);
-            }
-            else if (['mist', 'fog', 'haze', 'smoke'].includes(weather)) {
-              theme = 'fog';
-              console.log('rare', theme);
-            }
-
-            console.log('✅ Tema final aplicado:', theme);
-            window.lastWeather = { temp, description, cloudPercentage, weather, isNight };
-            applyTheme(theme);
-            if (typeof updateTicker === 'function') updateTicker();
-          } catch (err) {
-            console.warn('⚠️ No se pudo obtener el clima, usando hora local');
-            const hour = new Date().getHours();
-            const fallbackTheme = hour >= 7 && hour < 19 ? 'light' : 'dark';
-            window.lastWeather = null;
-            console.log('✅ Tema por fallback:', fallbackTheme);
-            applyTheme(fallbackTheme);
-            if (typeof updateTicker === 'function') updateTicker();
+      async function checkSunBarcelona() {
+        try {
+          const res = await fetch(SUNLIGHT_DATA_URL, { cache: 'no-cache' });
+          if (!res.ok) throw new Error(`sunlight.json responded ${res.status}`);
+          const payload = await res.json();
+          const { isoDate, localDate } = getMadridNow();
+          const info = payload?.days?.[isoDate];
+          if (!info || !info.sunriseUtc || !info.sunsetUtc) {
+            throw new Error(`Missing sunlight data for ${isoDate}`);
           }
+          const sunrise = new Date(info.sunriseUtc);
+          const sunset = new Date(info.sunsetUtc);
+          const isDaylight = localDate >= sunrise && localDate < sunset;
+          applyTheme(isDaylight ? 'light' : 'dark');
+        } catch (err) {
+          console.warn('⚠️ No se pudo leer sunlight.json, usando hora local', err);
+          const hour = new Date().getHours();
+          const fallbackTheme = hour >= 7 && hour < 19 ? 'light' : 'dark';
+          applyTheme(fallbackTheme);
         }
+      }
 
-        setThemeByBarcelonaWeather();
+      document.addEventListener('DOMContentLoaded', () => {
+        checkSunBarcelona();
       });
 
       // —————————————————————————
@@ -1259,55 +1157,6 @@
       });
 
     })();
-
-    const langToLocale = { ES:'es-ES', EN:'en-GB', FR:'fr-FR', CAT:'ca-ES' };
-    const themeLabels  = {
-      ES:{light:'claro',dark:'oscuro',cloud:'nubes',darkCloud:'nube densa',lightRain:'llovizna',rain:'lluvia',storm:'tormenta',heat:'calor',snow:'nieve',fog:'niebla'},
-      EN:{light:'light',dark:'dark',cloud:'clouds',darkCloud:'overcast',lightRain:'drizzle',rain:'rain',storm:'storm',heat:'heat',snow:'snow',fog:'fog'},
-      FR:{light:'clair',dark:'sombre',cloud:'nuages',darkCloud:'couvert',lightRain:'bruine',rain:'pluie',storm:'orage',heat:'chaleur',snow:'neige',fog:'brouillard'},
-      CAT:{light:'clar',dark:'fosc',cloud:'núvols',darkCloud:'enuvolat',lightRain:'plugim',rain:'pluja',storm:'tempesta',heat:'calor',snow:'neu',fog:'boira'}
-    };
-
-    function updateTicker(){
-      const el = document.getElementById('tickerText');
-      if (!el) return;
-      const lang = (typeof LANGS !== 'undefined' && Array.isArray(LANGS) && typeof currentLangIndex === 'number') ? LANGS[currentLangIndex] : 'ES';
-      const theme = (typeof themes !== 'undefined' && Array.isArray(themes) && typeof currentThemeIndex === 'number') ? themes[currentThemeIndex] : 'light';
-      const label = (typeof themeLabels !== 'undefined' && themeLabels[lang] && themeLabels[lang][theme]) ? themeLabels[lang][theme] : theme;
-
-      const msgs = {
-        ES: `El tiempo en Barcelona es «${label}». Para cambiar el tema, el idioma o las nubes, usa los 3 botones de la parte superior de tu pantalla.`,
-        EN: `Weather in Barcelona is “${label}.” To change the theme, language, or clouds, use the 3 buttons at the top of your screen.`,
-        FR: `À Barcelone, la météo est « ${label} ». Pour changer le thème, la langue ou les nuages, utilise les 3 boutons en haut de l’écran.`,
-        CAT:`El temps a Barcelona és «${label}». Per canviar el tema, l’idioma o els núvols, fes servir els 3 botons de la part superior de la pantalla.`
-      };
-
-      el.textContent = msgs[lang] || msgs.ES;
-      calibrateTicker();
-    }
-
-    function calibrateTicker(){
-      const inner = document.querySelector('.ticker-inner');
-      const span  = document.getElementById('tickerText');
-      if (!inner || !span) return;
-
-      // velocidad en píxeles por segundo
-      const SPEED = 80;
-
-      // medidas reales
-      const textW = span.offsetWidth || 0;
-      const vw    = window.innerWidth || 0;
-
-      // duración total: distancia (texto+viewport) / velocidad
-      let dur = (textW + vw) / SPEED; // en segundos
-      dur = Math.max(12, Math.min(40, dur));
-
-      // retraso negativo para empezar ya visible (30% del ciclo, máx 8s)
-      const neg = Math.min(8, dur * 0.3);
-
-      inner.style.animationDuration = `${dur}s`;
-      inner.style.animationDelay = `-${neg}s`;
-    }
 
     /* ==========================
        BLOQUE MULTILENGUAJE
@@ -1629,7 +1478,6 @@
       setupSlides();
       const btn = document.querySelector('#toggleLang');
       if (btn) btn.textContent = lang;
-      if (typeof updateTicker === 'function') updateTicker();
       requestAnimationFrame(() => { if (c && h) { c.style.opacity = h.style.opacity = '1'; } });
     }
 
@@ -1658,7 +1506,6 @@
       });
     });
 
-    window.addEventListener('resize', calibrateTicker);
   </script>
 
 </body>
