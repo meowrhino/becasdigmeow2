@@ -20,15 +20,6 @@ function addDaysUTC(date, days) {
   return copy;
 }
 
-function parseDayLength(lengthStr) {
-  const value = typeof lengthStr === 'string' ? lengthStr : String(lengthStr || '');
-  const parts = value.split(':');
-  const hours = Number(parts[0] || 0);
-  const minutes = Number(parts[1] || 0);
-  const seconds = Number(parts[2] || 0);
-  return (hours * 3600) + (minutes * 60) + seconds;
-}
-
 function getMadridYearMonth(date = new Date()) {
   const formatter = new Intl.DateTimeFormat('en-CA', {
     timeZone: CITY_TIMEZONE,
@@ -62,11 +53,7 @@ async function fetchSunlightFor(dateStr) {
   const r = payload.results;
   return {
     sunriseUtc: r.sunrise,
-    sunsetUtc: r.sunset,
-    civilTwilightBeginUtc: r.civil_twilight_begin,
-    civilTwilightEndUtc: r.civil_twilight_end,
-    solarNoonUtc: r.solar_noon,
-    dayLengthSeconds: parseDayLength(r.day_length)
+    sunsetUtc: r.sunset
   };
 }
 
