@@ -6,58 +6,84 @@ const path = require('node:path');
 const LAT = 41.3874;
 const LON = 2.1686;
 const CITY_TIMEZONE = 'Europe/Madrid';
+const EXTRA_NEXT_MONTH_DAYS = 5;
 const OUTPUT_PATH = path.join(__dirname, '..', 'data', 'sunlight.json');
-const API_ENDPOINT = 'https://api.openweathermap.org/data/2.5/onecall';
-const DAYS_TO_KEEP = 10; // data for ~1.5 semanas para cubrir margen
-
-const API_KEY = process.env.OPENWEATHER_API_KEY;
-
-if (!API_KEY) {
-  console.error('Missing OPENWEATHER_API_KEY env var.');
-  process.exit(1);
-}
+const API_ENDPOINT = 'https://api.sunrise-sunset.org/json';
 
 function toISODate(date) {
   return date.toISOString().slice(0, 10);
 }
 
-function formatLocalTime(epochSeconds) {
-  const formatter = new Intl.DateTimeFormat('en-GB', {
-    timeZone: CITY_TIMEZONE,
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false
-  });
-  return formatter.format(epochSeconds * 1000);
+function addDaysUTC(date, days) {
+  const copy = new Date(date);
+  copy.setUTCDate(copy.getUTCDate() + days);
+  return copy;
 }
 
-async function fetchForecast() {
-  const url = `${API_ENDPOINT}?lat=${LAT}&lon=${LON}&appid=${API_KEY}&units=metric&exclude=current,minutely,hourly,alerts`;
+function parseDayLength(lengthStr) {
+  const [hours = '0', minutes = '0', seconds = '0'] = (lengthStr || '').split(':');
+  return (Number(hours) * 3600) + (Number(minutes) * 60) + Number(seconds);
+}
+
+function getMadridYearMonth(date = new Date()) {
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: CITY_TIMEZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
+  const parts = formatter.formatToParts(date).reduce((acc, part) => {
+    if (part.type === 'year') acc.year = Number(part.value);
+    if (part.type === 'month') acc.month = Number(part.value);
+    if (part.type === 'day') acc.day = Number(part.value);
+    return acc;
+  }, {});
+  return {
+    year: parts.year,
+    month: (parts.month || 1) - 1,
+    day: parts.day || 1
+  };
+}
+
+async function fetchSunlightFor(dateStr) {
+  const url = `${API_ENDPOINT}?lat=${LAT}&lng=${LON}&date=${dateStr}&formatted=0`;
   const res = await fetch(url);
   if (!res.ok) {
-    throw new Error(`OpenWeatherMap responded with ${res.status}`);
+    throw new Error(`Sunrise-Sunset API responded with ${res.status} for ${dateStr}`);
   }
-  return res.json();
+  const payload = await res.json();
+  if (payload.status !== 'OK' || !payload.results) {
+    throw new Error(`Unexpected response for ${dateStr}: ${JSON.stringify(payload)}`);
+  }
+  const r = payload.results;
+  return {
+    sunriseUtc: r.sunrise,
+    sunsetUtc: r.sunset,
+    civilTwilightBeginUtc: r.civil_twilight_begin,
+    civilTwilightEndUtc: r.civil_twilight_end,
+    solarNoonUtc: r.solar_noon,
+    dayLengthSeconds: parseDayLength(r.day_length)
+  };
 }
 
 async function main() {
-  const data = await fetchForecast();
-  if (!Array.isArray(data.daily) || data.daily.length === 0) {
-    throw new Error('OpenWeatherMap response does not contain daily forecast data.');
-  }
+  const { year, month } = getMadridYearMonth();
+  const periodStart = new Date(Date.UTC(year, month, 1));
+
+  const nextMonth = month === 11 ? { year: year + 1, month: 0 } : { year, month: month + 1 };
+  const periodEnd = addDaysUTC(new Date(Date.UTC(nextMonth.year, nextMonth.month, 1)), EXTRA_NEXT_MONTH_DAYS - 1);
 
   const days = {};
-  data.daily.slice(0, DAYS_TO_KEEP).forEach((day) => {
-    const dateStr = toISODate(new Date(day.dt * 1000));
-    days[dateStr] = {
-      sunriseUnix: day.sunrise,
-      sunsetUnix: day.sunset,
-      sunriseUtc: new Date(day.sunrise * 1000).toISOString(),
-      sunsetUtc: new Date(day.sunset * 1000).toISOString(),
-      sunriseLocal: formatLocalTime(day.sunrise),
-      sunsetLocal: formatLocalTime(day.sunset)
-    };
-  });
+  let cursor = new Date(periodStart);
+  while (cursor <= periodEnd) {
+    const iso = toISODate(cursor);
+    /* eslint-disable no-await-in-loop */
+    const info = await fetchSunlightFor(iso);
+    /* eslint-enable no-await-in-loop */
+    days[iso] = info;
+    console.log(`✔️  ${iso}`);
+    cursor = addDaysUTC(cursor, 1);
+  }
 
   const output = {
     meta: {
@@ -65,8 +91,8 @@ async function main() {
       timezone: CITY_TIMEZONE,
       latitude: LAT,
       longitude: LON,
-      source: 'api.openweathermap.org/data/2.5/onecall',
-      daysIncluded: Object.keys(days).length
+      startDate: toISODate(periodStart),
+      endDate: toISODate(periodEnd)
     },
     days
   };

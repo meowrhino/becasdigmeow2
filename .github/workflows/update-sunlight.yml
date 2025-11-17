@@ -2,7 +2,7 @@ name: Update sunlight data
 
 on:
   schedule:
-    - cron: '30 4 * * 1'
+    - cron: '33 3 3 * *'
   workflow_dispatch:
 
 permissions:
@@ -11,8 +11,6 @@ permissions:
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    env:
-      OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
 
     steps:
       - name: Checkout repository
