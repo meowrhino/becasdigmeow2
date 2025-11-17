@@ -1033,6 +1033,8 @@ html[data-theme="dark"] {
 
       const CITY_TIMEZONE = 'Europe/Madrid';
       const SUNLIGHT_DATA_URL = 'data/sunlight.json';
+      const SUNLIGHT_CACHE_KEY = 'sunlight:data';
+      const SUNLIGHT_CACHE_TTL_MS = 4 * 60 * 60 * 1000; // 4h
       const madridFormatter = new Intl.DateTimeFormat('en-CA', {
         timeZone: CITY_TIMEZONE,
         hour12: false,
@@ -1063,11 +1065,51 @@ html[data-theme="dark"] {
         return (Number(parts.hour) * 3600) + (Number(parts.minute) * 60) + Number(parts.second);
       }
 
-      async function checkSunBarcelona() {
+      function getCachedSunlight({ allowExpired = false } = {}) {
         try {
-          const res = await fetch(SUNLIGHT_DATA_URL, { cache: 'no-cache' });
+          const raw = localStorage.getItem(SUNLIGHT_CACHE_KEY);
+          if (!raw) return null;
+          const parsed = JSON.parse(raw);
+          if (!parsed || typeof parsed.timestamp !== 'number' || !parsed.payload) return null;
+          if (!allowExpired && (Date.now() - parsed.timestamp > SUNLIGHT_CACHE_TTL_MS)) return null;
+          return parsed;
+        } catch (err) {
+          console.warn('⚠️ Cache de sunlight.json corrupta, se ignora', err);
+          return null;
+        }
+      }
+
+      function cacheSunlightPayload(payload) {
+        try {
+          const record = { timestamp: Date.now(), payload };
+          localStorage.setItem(SUNLIGHT_CACHE_KEY, JSON.stringify(record));
+        } catch (err) {
+          console.warn('⚠️ No se pudo cachear sunlight.json', err);
+        }
+      }
+
+      async function loadSunlightPayload() {
+        const cached = getCachedSunlight();
+        if (cached) return cached.payload;
+        try {
+          const res = await fetch(SUNLIGHT_DATA_URL, { cache: 'no-store' });
           if (!res.ok) throw new Error(`sunlight.json responded ${res.status}`);
           const payload = await res.json();
+          cacheSunlightPayload(payload);
+          return payload;
+        } catch (networkErr) {
+          const stale = getCachedSunlight({ allowExpired: true });
+          if (stale) {
+            console.warn('⚠️ Usando sunlight.json cacheado (expirado) por error de red', networkErr);
+            return stale.payload;
+          }
+          throw networkErr;
+        }
+      }
+
+      async function checkSunBarcelona() {
+        try {
+          const payload = await loadSunlightPayload();
           const { isoDate, seconds: nowSeconds } = getMadridNow();
           const info = payload?.days?.[isoDate];
           if (!info || !info.sunriseUtc || !info.sunsetUtc) {
@@ -1296,9 +1338,111 @@ html[data-theme="dark"] {
       }
     };
 
+    function appendSafeRichText(target, html = '') {
+      if (!html) return;
+      const temp = document.createElement('div');
+      temp.innerHTML = html;
+      Array.from(temp.childNodes).forEach(node => {
+        if (node.nodeType === Node.TEXT_NODE) {
+          target.appendChild(document.createTextNode(node.textContent));
+          return;
+        }
+        if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'A') {
+          const safeLink = document.createElement('a');
+          const href = node.getAttribute('href');
+          if (href) safeLink.href = href;
+          const targetAttr = node.getAttribute('target');
+          if (targetAttr) safeLink.target = targetAttr;
+          safeLink.rel = node.getAttribute('rel') || 'noopener noreferrer';
+          safeLink.textContent = node.textContent;
+          target.appendChild(safeLink);
+          return;
+        }
+        if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'BR') {
+          target.appendChild(document.createElement('br'));
+          return;
+        }
+        target.appendChild(document.createTextNode(node.textContent));
+      });
+    }
+
+    const MULTI_IMAGE_EXTENSIONS = ['jpeg', 'jpg', 'png', 'webp'];
+    const SINGLE_IMAGE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'webp'];
+    const imageExtensionCache = new Map();
+
+    function getImageCacheKey(folder, device, qty) {
+      return `${folder}|${device}|${qty > 1 ? 'multi' : 'single'}`;
+    }
+
+    function getImageBasePath(folder, device, idx, qty) {
+      const suffix = qty > 1 ? `-${(idx % qty) + 1}` : '';
+      return `galeria/${folder}/${device}${suffix}`;
+    }
+
+    function getExtensionCandidates(folder, device, qty) {
+      const defaults = qty > 1 ? MULTI_IMAGE_EXTENSIONS : SINGLE_IMAGE_EXTENSIONS;
+      const key = getImageCacheKey(folder, device, qty);
+      if (!imageExtensionCache.has(key)) {
+        return defaults.slice();
+      }
+      const cached = imageExtensionCache.get(key);
+      return [cached, ...defaults.filter(ext => ext !== cached)];
+    }
+
+    function resolveImageSrc(folder, device, idx, qty) {
+      const base = getImageBasePath(folder, device, idx, qty);
+      const candidates = getExtensionCandidates(folder, device, qty);
+      return `${base}.${candidates[0]}`;
+    }
+
+    function getPlaceholderForDevice(device) {
+      return device === 'ordenador'
+        ? 'galeria/_placeholder/ordenador.png'
+        : 'galeria/_placeholder/movil.png';
+    }
+
+    function setImageSrcWithFallback(imgEl, folder, device, idx, qty, onLoad) {
+      const base = getImageBasePath(folder, device, idx, qty);
+      const key = getImageCacheKey(folder, device, qty);
+      const candidates = getExtensionCandidates(folder, device, qty);
+      let attempt = 0;
+      imgEl.dataset.folder = folder;
+      imgEl.dataset.device = device;
+      imgEl.dataset.qty = String(qty);
+      imgEl.dataset.currentIndex = String(idx);
+
+      const tryNext = () => {
+        if (attempt >= candidates.length) {
+          imgEl.src = getPlaceholderForDevice(device);
+          if (typeof onLoad === 'function') onLoad();
+          return;
+        }
+        const ext = candidates[attempt++];
+        const src = `${base}.${ext}`;
+        const handleLoad = () => {
+          cleanup();
+          imageExtensionCache.set(key, ext);
+          if (typeof onLoad === 'function') onLoad();
+        };
+        const handleError = () => {
+          cleanup();
+          tryNext();
+        };
+        const cleanup = () => {
+          imgEl.removeEventListener('load', handleLoad);
+          imgEl.removeEventListener('error', handleError);
+        };
+        imgEl.addEventListener('load', handleLoad, { once: true });
+        imgEl.addEventListener('error', handleError, { once: true });
+        imgEl.src = src;
+      };
+
+      tryNext();
+    }
+
     function crearGaleria(webs, lang = 'ES') {
       const contenedor = document.getElementById('galeriaWebs');
-      contenedor.innerHTML = '';
+      contenedor.textContent = '';
       webs.forEach(web => {
         const article = document.createElement('article');
         article.className = 'web-card';
@@ -1316,21 +1460,40 @@ html[data-theme="dark"] {
           FR: `aperçu mobile de ${web.nombre}`,
           CAT: `vista mòbil de ${web.nombre}`
         }[lang];
-        // Lógica para elegir extensión según imgQuantity
         const qty = web.imgQuantity || 1;
-        const ordenadorImg = qty > 1
-          ? `galeria/${web.carpeta}/ordenador-1.jpeg`
-          : `galeria/${web.carpeta}/ordenador.png`;
-        const movilImg = qty > 1
-          ? `galeria/${web.carpeta}/movil-1.jpeg`
-          : `galeria/${web.carpeta}/movil.png`;
-        article.innerHTML = `
-      <div class="web-preview ${web.movilPos === 'right' ? 'movil-derecha' : 'movil-izquierda'}" data-folder="${web.carpeta}" data-qty="${qty}">
-        <img src="${ordenadorImg}" alt="${altDesktop}" class="img-ordenador img-fade" loading="lazy" decoding="async" onerror="this.src='galeria/_placeholder/ordenador.png';">
-        <img src="${movilImg}" alt="${altMobile}" class="img-movil img-fade" loading="lazy" decoding="async" onerror="this.src='galeria/_placeholder/movil.png';">
-      </div>
-      <div class="web-texto">${texto}</div>
-    `;
+
+        const preview = document.createElement('div');
+        preview.className = `web-preview ${web.movilPos === 'right' ? 'movil-derecha' : 'movil-izquierda'}`;
+        preview.dataset.folder = web.carpeta;
+        preview.dataset.qty = String(qty);
+
+        const desktopImg = document.createElement('img');
+        desktopImg.alt = altDesktop;
+        desktopImg.className = 'img-ordenador img-fade';
+        desktopImg.loading = 'lazy';
+        desktopImg.decoding = 'async';
+
+        const mobileImg = document.createElement('img');
+        mobileImg.alt = altMobile;
+        mobileImg.className = 'img-movil img-fade';
+        mobileImg.loading = 'lazy';
+        mobileImg.decoding = 'async';
+        setImageSrcWithFallback(desktopImg, web.carpeta, 'ordenador', 0, qty);
+        setImageSrcWithFallback(mobileImg, web.carpeta, 'movil', 0, qty);
+
+        preview.appendChild(desktopImg);
+        preview.appendChild(mobileImg);
+
+        const textDiv = document.createElement('div');
+        textDiv.className = 'web-texto';
+        if (/<a\b/i.test(texto)) {
+          appendSafeRichText(textDiv, texto);
+        } else {
+          textDiv.textContent = texto;
+        }
+
+        article.appendChild(preview);
+        article.appendChild(textDiv);
         contenedor.appendChild(article);
       });
     }
@@ -1340,67 +1503,92 @@ html[data-theme="dark"] {
     // ==========================
     const TOTAL_WEB_COUNT = websRealizadas.length; // cache: no hace falta contar DOM cada vez
     const BASE_PER_CARD_MS = 800; // base de 0.8s por tarjeta para ola completa
+    const slideControllers = new Map();
 
-    function makeSrc(folder, device, idx, qty) {
-      // Para galerías con varias imágenes, los archivos están nombrados 1..qty
-      if (qty > 1) {
-        const i = (idx % qty) + 1; // mapea 0..qty-1 -> 1..qty
-        return `galeria/${folder}/${device}-${i}.jpeg`;
-      }
-      // Con una sola imagen usamos el base (sin sufijo). OJO: en crearGaleria() ya ponemos .png
-      return `galeria/${folder}/${device}.jpeg`;
+    function preload(folder, device, idx, qty) {
+      const im = new Image();
+      im.decoding = 'async';
+      im.loading = 'eager';
+      im.src = resolveImageSrc(folder, device, idx, qty);
     }
 
-    function swapSrcWithFade(imgEl, nextSrc) {
+    function swapSrcWithFade(imgEl, folder, device, idx, qty) {
       imgEl.classList.add('is-hidden');
-      const onload = () => {
-        imgEl.classList.remove('is-hidden');
-        imgEl.removeEventListener('load', onload);
-      };
-      imgEl.addEventListener('load', onload);
-      setTimeout(() => { imgEl.src = nextSrc; }, 120);
+      requestAnimationFrame(() => {
+        setImageSrcWithFallback(imgEl, folder, device, idx, qty, () => {
+          imgEl.classList.remove('is-hidden');
+        });
+      });
+    }
+
+    function resetSlides() {
+      slideControllers.forEach(controller => controller.destroy());
+      slideControllers.clear();
+    }
+
+    function createSlideController(folder, qty, desk, mob, startDelay, intervalMs) {
+      let cur = 0;
+      let intervalId = null;
+      let timeoutId = null;
+
+      function advance() {
+        if (document.hidden) return;
+        desk.classList.add('breathing');
+        mob.classList.add('breathing');
+        setTimeout(() => {
+          desk.classList.remove('breathing');
+          mob.classList.remove('breathing');
+        }, 900);
+        const next = (cur + 1) % qty;
+        preload(folder, 'ordenador', next, qty);
+        preload(folder, 'movil', next, qty);
+        cur = next;
+        swapSrcWithFade(desk, folder, 'ordenador', cur, qty);
+        swapSrcWithFade(mob, folder, 'movil', cur, qty);
+      }
+
+      function start() {
+        if (intervalId || timeoutId) return;
+        timeoutId = setTimeout(() => {
+          advance();
+          intervalId = setInterval(advance, intervalMs);
+        }, startDelay);
+      }
+
+      function destroy() {
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+          timeoutId = null;
+        }
+        if (intervalId) {
+          clearInterval(intervalId);
+          intervalId = null;
+        }
+      }
+
+      return { start, destroy };
     }
 
     function setupSlides() {
+      resetSlides();
       const cards = Array.from(document.querySelectorAll('.web-preview'));
+      if (!cards.length) return;
       const total = TOTAL_WEB_COUNT || cards.length || 1;
       const SLIDE_INTERVAL_MS = Math.max(3500, total * BASE_PER_CARD_MS); // ola completa
       const STAGGER = Math.floor(SLIDE_INTERVAL_MS / total); // retraso escalonado
 
-      const io = new IntersectionObserver((entries) => {
-        entries.forEach(e => { e.target.__visible = e.isIntersecting; });
-      }, { rootMargin: '50px' });
-
       cards.forEach((card, idx) => {
         const folder = card.getAttribute('data-folder');
         const qty = parseInt(card.getAttribute('data-qty') || '1', 10);
-        if (qty <= 1) return; // sin slideshow si solo hay 1
-        io.observe(card);
+        if (!folder || qty <= 1) return; // sin slideshow si solo hay 1
 
         const desk = card.querySelector('.img-ordenador');
         const mob = card.querySelector('.img-movil');
-        let cur = 0;
+        if (!desk || !mob) return;
 
-        function preload(src) { const im = new Image(); im.decoding = 'async'; im.loading = 'eager'; im.src = src; }
-
-        function advance() {
-          if (!card.__visible || document.hidden) return;
-          desk.classList.add('breathing');
-          mob.classList.add('breathing');
-          setTimeout(() => { desk.classList.remove('breathing'); mob.classList.remove('breathing'); }, 900);
-          const next = (cur + 1) % qty;
-          preload(makeSrc(folder, 'ordenador', next, qty));
-          preload(makeSrc(folder, 'movil', next, qty));
-          cur = next;
-          swapSrcWithFade(desk, makeSrc(folder, 'ordenador', cur, qty));
-          swapSrcWithFade(mob, makeSrc(folder, 'movil', cur, qty));
-        }
-
-        setTimeout(() => {
-          // primer cambio tras el offset para iniciar la ola
-          advance();
-          setInterval(advance, SLIDE_INTERVAL_MS);
-        }, idx * STAGGER);
+        const controller = createSlideController(folder, qty, desk, mob, idx * STAGGER, SLIDE_INTERVAL_MS);
+        slideControllers.set(card, controller);
+        controller.start();
       });
     }
 
