@@ -26,7 +26,7 @@ jobs:
 
       - name: Commit and push updated data
         run: |
-          if git diff --quiet --exit-code; then
+          if [[ -z "$(git status --short data/sunlight.json)" ]]; then
             echo "No changes to commit"
             exit 0
           fi
