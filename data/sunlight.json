@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generatedAtUtc": "2025-11-17T10:22:43.568Z",
+    "generatedAtUtc": "2025-11-17T10:27:08.750Z",
     "timezone": "Europe/Madrid",
     "latitude": 41.3874,
     "longitude": 2.1686,
@@ -10,283 +10,143 @@
   "days": {
     "2025-11-01": {
       "sunriseUtc": "2025-11-01T06:21:44+00:00",
-      "sunsetUtc": "2025-11-01T16:48:03+00:00",
-      "civilTwilightBeginUtc": "2025-11-01T05:54:31+00:00",
-      "civilTwilightEndUtc": "2025-11-01T17:15:16+00:00",
-      "solarNoonUtc": "2025-11-01T11:34:54+00:00",
-      "dayLengthSeconds": 135284400
+      "sunsetUtc": "2025-11-01T16:48:03+00:00"
     },
     "2025-11-02": {
       "sunriseUtc": "2025-11-02T06:22:56+00:00",
-      "sunsetUtc": "2025-11-02T16:46:49+00:00",
-      "civilTwilightBeginUtc": "2025-11-02T05:55:39+00:00",
-      "civilTwilightEndUtc": "2025-11-02T17:14:06+00:00",
-      "solarNoonUtc": "2025-11-02T11:34:53+00:00",
-      "dayLengthSeconds": 134758800
+      "sunsetUtc": "2025-11-02T16:46:49+00:00"
     },
     "2025-11-03": {
       "sunriseUtc": "2025-11-03T06:24:08+00:00",
-      "sunsetUtc": "2025-11-03T16:45:37+00:00",
-      "civilTwilightBeginUtc": "2025-11-03T05:56:47+00:00",
-      "civilTwilightEndUtc": "2025-11-03T17:12:58+00:00",
-      "solarNoonUtc": "2025-11-03T11:34:53+00:00",
-      "dayLengthSeconds": 134240400
+      "sunsetUtc": "2025-11-03T16:45:37+00:00"
     },
     "2025-11-04": {
       "sunriseUtc": "2025-11-04T06:25:20+00:00",
-      "sunsetUtc": "2025-11-04T16:44:27+00:00",
-      "civilTwilightBeginUtc": "2025-11-04T05:57:55+00:00",
-      "civilTwilightEndUtc": "2025-11-04T17:11:52+00:00",
-      "solarNoonUtc": "2025-11-04T11:34:53+00:00",
-      "dayLengthSeconds": 133729200
+      "sunsetUtc": "2025-11-04T16:44:27+00:00"
     },
     "2025-11-05": {
       "sunriseUtc": "2025-11-05T06:26:32+00:00",
-      "sunsetUtc": "2025-11-05T16:43:18+00:00",
-      "civilTwilightBeginUtc": "2025-11-05T05:59:03+00:00",
-      "civilTwilightEndUtc": "2025-11-05T17:10:46+00:00",
-      "solarNoonUtc": "2025-11-05T11:34:55+00:00",
-      "dayLengthSeconds": 133221600
+      "sunsetUtc": "2025-11-05T16:43:18+00:00"
     },
     "2025-11-06": {
       "sunriseUtc": "2025-11-06T06:27:44+00:00",
-      "sunsetUtc": "2025-11-06T16:42:11+00:00",
-      "civilTwilightBeginUtc": "2025-11-06T06:00:12+00:00",
-      "civilTwilightEndUtc": "2025-11-06T17:09:43+00:00",
-      "solarNoonUtc": "2025-11-06T11:34:57+00:00",
-      "dayLengthSeconds": 132721200
+      "sunsetUtc": "2025-11-06T16:42:11+00:00"
     },
     "2025-11-07": {
       "sunriseUtc": "2025-11-07T06:28:56+00:00",
-      "sunsetUtc": "2025-11-07T16:41:05+00:00",
-      "civilTwilightBeginUtc": "2025-11-07T06:01:20+00:00",
-      "civilTwilightEndUtc": "2025-11-07T17:08:41+00:00",
-      "solarNoonUtc": "2025-11-07T11:35:00+00:00",
-      "dayLengthSeconds": 132224400
+      "sunsetUtc": "2025-11-07T16:41:05+00:00"
     },
     "2025-11-08": {
       "sunriseUtc": "2025-11-08T06:30:08+00:00",
-      "sunsetUtc": "2025-11-08T16:40:01+00:00",
-      "civilTwilightBeginUtc": "2025-11-08T06:02:28+00:00",
-      "civilTwilightEndUtc": "2025-11-08T17:07:41+00:00",
-      "solarNoonUtc": "2025-11-08T11:35:05+00:00",
-      "dayLengthSeconds": 131734800
+      "sunsetUtc": "2025-11-08T16:40:01+00:00"
     },
     "2025-11-09": {
       "sunriseUtc": "2025-11-09T06:31:20+00:00",
-      "sunsetUtc": "2025-11-09T16:38:58+00:00",
-      "civilTwilightBeginUtc": "2025-11-09T06:03:36+00:00",
-      "civilTwilightEndUtc": "2025-11-09T17:06:42+00:00",
-      "solarNoonUtc": "2025-11-09T11:35:09+00:00",
-      "dayLengthSeconds": 131248800
+      "sunsetUtc": "2025-11-09T16:38:58+00:00"
     },
     "2025-11-10": {
       "sunriseUtc": "2025-11-10T06:32:33+00:00",
-      "sunsetUtc": "2025-11-10T16:37:58+00:00",
-      "civilTwilightBeginUtc": "2025-11-10T06:04:45+00:00",
-      "civilTwilightEndUtc": "2025-11-10T17:05:46+00:00",
-      "solarNoonUtc": "2025-11-10T11:35:15+00:00",
-      "dayLengthSeconds": 130770000
+      "sunsetUtc": "2025-11-10T16:37:58+00:00"
     },
     "2025-11-11": {
       "sunriseUtc": "2025-11-11T06:33:45+00:00",
-      "sunsetUtc": "2025-11-11T16:36:59+00:00",
-      "civilTwilightBeginUtc": "2025-11-11T06:05:53+00:00",
-      "civilTwilightEndUtc": "2025-11-11T17:04:51+00:00",
-      "solarNoonUtc": "2025-11-11T11:35:22+00:00",
-      "dayLengthSeconds": 130298400
+      "sunsetUtc": "2025-11-11T16:36:59+00:00"
     },
     "2025-11-12": {
       "sunriseUtc": "2025-11-12T06:34:57+00:00",
-      "sunsetUtc": "2025-11-12T16:36:02+00:00",
-      "civilTwilightBeginUtc": "2025-11-12T06:07:01+00:00",
-      "civilTwilightEndUtc": "2025-11-12T17:03:58+00:00",
-      "solarNoonUtc": "2025-11-12T11:35:29+00:00",
-      "dayLengthSeconds": 129834000
+      "sunsetUtc": "2025-11-12T16:36:02+00:00"
     },
     "2025-11-13": {
       "sunriseUtc": "2025-11-13T06:36:09+00:00",
-      "sunsetUtc": "2025-11-13T16:35:06+00:00",
-      "civilTwilightBeginUtc": "2025-11-13T06:08:09+00:00",
-      "civilTwilightEndUtc": "2025-11-13T17:03:06+00:00",
-      "solarNoonUtc": "2025-11-13T11:35:38+00:00",
-      "dayLengthSeconds": 129373200
+      "sunsetUtc": "2025-11-13T16:35:06+00:00"
     },
     "2025-11-14": {
       "sunriseUtc": "2025-11-14T06:37:21+00:00",
-      "sunsetUtc": "2025-11-14T16:34:13+00:00",
-      "civilTwilightBeginUtc": "2025-11-14T06:09:17+00:00",
-      "civilTwilightEndUtc": "2025-11-14T17:02:17+00:00",
-      "solarNoonUtc": "2025-11-14T11:35:47+00:00",
-      "dayLengthSeconds": 128923200
+      "sunsetUtc": "2025-11-14T16:34:13+00:00"
     },
     "2025-11-15": {
       "sunriseUtc": "2025-11-15T06:38:32+00:00",
-      "sunsetUtc": "2025-11-15T16:33:21+00:00",
-      "civilTwilightBeginUtc": "2025-11-15T06:10:24+00:00",
-      "civilTwilightEndUtc": "2025-11-15T17:01:29+00:00",
-      "solarNoonUtc": "2025-11-15T11:35:57+00:00",
-      "dayLengthSeconds": 128480400
+      "sunsetUtc": "2025-11-15T16:33:21+00:00"
     },
     "2025-11-16": {
       "sunriseUtc": "2025-11-16T06:39:44+00:00",
-      "sunsetUtc": "2025-11-16T16:32:31+00:00",
-      "civilTwilightBeginUtc": "2025-11-16T06:11:32+00:00",
-      "civilTwilightEndUtc": "2025-11-16T17:00:44+00:00",
-      "solarNoonUtc": "2025-11-16T11:36:08+00:00",
-      "dayLengthSeconds": 128041200
+      "sunsetUtc": "2025-11-16T16:32:31+00:00"
     },
     "2025-11-17": {
       "sunriseUtc": "2025-11-17T06:40:55+00:00",
-      "sunsetUtc": "2025-11-17T16:31:44+00:00",
-      "civilTwilightBeginUtc": "2025-11-17T06:12:39+00:00",
-      "civilTwilightEndUtc": "2025-11-17T17:00:00+00:00",
-      "solarNoonUtc": "2025-11-17T11:36:19+00:00",
-      "dayLengthSeconds": 127616400
+      "sunsetUtc": "2025-11-17T16:31:44+00:00"
     },
     "2025-11-18": {
       "sunriseUtc": "2025-11-18T06:42:06+00:00",
-      "sunsetUtc": "2025-11-18T16:30:58+00:00",
-      "civilTwilightBeginUtc": "2025-11-18T06:13:45+00:00",
-      "civilTwilightEndUtc": "2025-11-18T16:59:18+00:00",
-      "solarNoonUtc": "2025-11-18T11:36:32+00:00",
-      "dayLengthSeconds": 127195200
+      "sunsetUtc": "2025-11-18T16:30:58+00:00"
     },
     "2025-11-19": {
       "sunriseUtc": "2025-11-19T06:43:16+00:00",
-      "sunsetUtc": "2025-11-19T16:30:14+00:00",
-      "civilTwilightBeginUtc": "2025-11-19T06:14:52+00:00",
-      "civilTwilightEndUtc": "2025-11-19T16:58:38+00:00",
-      "solarNoonUtc": "2025-11-19T11:36:45+00:00",
-      "dayLengthSeconds": 126784800
+      "sunsetUtc": "2025-11-19T16:30:14+00:00"
     },
     "2025-11-20": {
       "sunriseUtc": "2025-11-20T06:44:26+00:00",
-      "sunsetUtc": "2025-11-20T16:29:32+00:00",
-      "civilTwilightBeginUtc": "2025-11-20T06:15:58+00:00",
-      "civilTwilightEndUtc": "2025-11-20T16:58:01+00:00",
-      "solarNoonUtc": "2025-11-20T11:36:59+00:00",
-      "dayLengthSeconds": 126381600
+      "sunsetUtc": "2025-11-20T16:29:32+00:00"
     },
     "2025-11-21": {
       "sunriseUtc": "2025-11-21T06:45:36+00:00",
-      "sunsetUtc": "2025-11-21T16:28:53+00:00",
-      "civilTwilightBeginUtc": "2025-11-21T06:17:04+00:00",
-      "civilTwilightEndUtc": "2025-11-21T16:57:25+00:00",
-      "solarNoonUtc": "2025-11-21T11:37:14+00:00",
-      "dayLengthSeconds": 125989200
+      "sunsetUtc": "2025-11-21T16:28:53+00:00"
     },
     "2025-11-22": {
       "sunriseUtc": "2025-11-22T06:46:45+00:00",
-      "sunsetUtc": "2025-11-22T16:28:15+00:00",
-      "civilTwilightBeginUtc": "2025-11-22T06:18:09+00:00",
-      "civilTwilightEndUtc": "2025-11-22T16:56:51+00:00",
-      "solarNoonUtc": "2025-11-22T11:37:30+00:00",
-      "dayLengthSeconds": 125604000
+      "sunsetUtc": "2025-11-22T16:28:15+00:00"
     },
     "2025-11-23": {
       "sunriseUtc": "2025-11-23T06:47:53+00:00",
-      "sunsetUtc": "2025-11-23T16:27:40+00:00",
-      "civilTwilightBeginUtc": "2025-11-23T06:19:13+00:00",
-      "civilTwilightEndUtc": "2025-11-23T16:56:20+00:00",
-      "solarNoonUtc": "2025-11-23T11:37:47+00:00",
-      "dayLengthSeconds": 125233200
+      "sunsetUtc": "2025-11-23T16:27:40+00:00"
     },
     "2025-11-24": {
       "sunriseUtc": "2025-11-24T06:49:01+00:00",
-      "sunsetUtc": "2025-11-24T16:27:07+00:00",
-      "civilTwilightBeginUtc": "2025-11-24T06:20:17+00:00",
-      "civilTwilightEndUtc": "2025-11-24T16:55:50+00:00",
-      "solarNoonUtc": "2025-11-24T11:38:04+00:00",
-      "dayLengthSeconds": 124869600
+      "sunsetUtc": "2025-11-24T16:27:07+00:00"
     },
     "2025-11-25": {
       "sunriseUtc": "2025-11-25T06:50:08+00:00",
-      "sunsetUtc": "2025-11-25T16:26:36+00:00",
-      "civilTwilightBeginUtc": "2025-11-25T06:21:21+00:00",
-      "civilTwilightEndUtc": "2025-11-25T16:55:23+00:00",
-      "solarNoonUtc": "2025-11-25T11:38:22+00:00",
-      "dayLengthSeconds": 124516800
+      "sunsetUtc": "2025-11-25T16:26:36+00:00"
     },
     "2025-11-26": {
       "sunriseUtc": "2025-11-26T06:51:15+00:00",
-      "sunsetUtc": "2025-11-26T16:26:07+00:00",
-      "civilTwilightBeginUtc": "2025-11-26T06:22:24+00:00",
-      "civilTwilightEndUtc": "2025-11-26T16:54:58+00:00",
-      "solarNoonUtc": "2025-11-26T11:38:41+00:00",
-      "dayLengthSeconds": 124171200
+      "sunsetUtc": "2025-11-26T16:26:07+00:00"
     },
     "2025-11-27": {
       "sunriseUtc": "2025-11-27T06:52:21+00:00",
-      "sunsetUtc": "2025-11-27T16:25:40+00:00",
-      "civilTwilightBeginUtc": "2025-11-27T06:23:26+00:00",
-      "civilTwilightEndUtc": "2025-11-27T16:54:35+00:00",
-      "solarNoonUtc": "2025-11-27T11:39:00+00:00",
-      "dayLengthSeconds": 123836400
+      "sunsetUtc": "2025-11-27T16:25:40+00:00"
     },
     "2025-11-28": {
       "sunriseUtc": "2025-11-28T06:53:25+00:00",
-      "sunsetUtc": "2025-11-28T16:25:16+00:00",
-      "civilTwilightBeginUtc": "2025-11-28T06:24:27+00:00",
-      "civilTwilightEndUtc": "2025-11-28T16:54:14+00:00",
-      "solarNoonUtc": "2025-11-28T11:39:21+00:00",
-      "dayLengthSeconds": 123519600
+      "sunsetUtc": "2025-11-28T16:25:16+00:00"
     },
     "2025-11-29": {
       "sunriseUtc": "2025-11-29T06:54:30+00:00",
-      "sunsetUtc": "2025-11-29T16:24:54+00:00",
-      "civilTwilightBeginUtc": "2025-11-29T06:25:28+00:00",
-      "civilTwilightEndUtc": "2025-11-29T16:53:55+00:00",
-      "solarNoonUtc": "2025-11-29T11:39:42+00:00",
-      "dayLengthSeconds": 123206400
+      "sunsetUtc": "2025-11-29T16:24:54+00:00"
     },
     "2025-11-30": {
       "sunriseUtc": "2025-11-30T06:55:33+00:00",
-      "sunsetUtc": "2025-11-30T16:24:34+00:00",
-      "civilTwilightBeginUtc": "2025-11-30T06:26:28+00:00",
-      "civilTwilightEndUtc": "2025-11-30T16:53:39+00:00",
-      "solarNoonUtc": "2025-11-30T11:40:03+00:00",
-      "dayLengthSeconds": 122907600
+      "sunsetUtc": "2025-11-30T16:24:34+00:00"
     },
     "2025-12-01": {
       "sunriseUtc": "2025-12-01T06:56:35+00:00",
-      "sunsetUtc": "2025-12-01T16:24:16+00:00",
-      "civilTwilightBeginUtc": "2025-12-01T06:27:27+00:00",
-      "civilTwilightEndUtc": "2025-12-01T16:53:24+00:00",
-      "solarNoonUtc": "2025-12-01T11:40:26+00:00",
-      "dayLengthSeconds": 122619600
+      "sunsetUtc": "2025-12-01T16:24:16+00:00"
     },
     "2025-12-02": {
       "sunriseUtc": "2025-12-02T06:57:36+00:00",
-      "sunsetUtc": "2025-12-02T16:24:01+00:00",
-      "civilTwilightBeginUtc": "2025-12-02T06:28:25+00:00",
-      "civilTwilightEndUtc": "2025-12-02T16:53:12+00:00",
-      "solarNoonUtc": "2025-12-02T11:40:49+00:00",
-      "dayLengthSeconds": 122346000
+      "sunsetUtc": "2025-12-02T16:24:01+00:00"
     },
     "2025-12-03": {
       "sunriseUtc": "2025-12-03T06:58:36+00:00",
-      "sunsetUtc": "2025-12-03T16:23:48+00:00",
-      "civilTwilightBeginUtc": "2025-12-03T06:29:22+00:00",
-      "civilTwilightEndUtc": "2025-12-03T16:53:02+00:00",
-      "solarNoonUtc": "2025-12-03T11:41:12+00:00",
-      "dayLengthSeconds": 122083200
+      "sunsetUtc": "2025-12-03T16:23:48+00:00"
     },
     "2025-12-04": {
       "sunriseUtc": "2025-12-04T06:59:35+00:00",
-      "sunsetUtc": "2025-12-04T16:23:38+00:00",
-      "civilTwilightBeginUtc": "2025-12-04T06:30:18+00:00",
-      "civilTwilightEndUtc": "2025-12-04T16:52:55+00:00",
-      "solarNoonUtc": "2025-12-04T11:41:36+00:00",
-      "dayLengthSeconds": 121834800
+      "sunsetUtc": "2025-12-04T16:23:38+00:00"
     },
     "2025-12-05": {
       "sunriseUtc": "2025-12-05T07:00:32+00:00",
-      "sunsetUtc": "2025-12-05T16:23:30+00:00",
-      "civilTwilightBeginUtc": "2025-12-05T06:31:13+00:00",
-      "civilTwilightEndUtc": "2025-12-05T16:52:49+00:00",
-      "solarNoonUtc": "2025-12-05T11:42:01+00:00",
-      "dayLengthSeconds": 121600800
+      "sunsetUtc": "2025-12-05T16:23:30+00:00"
     }
   }
 }
