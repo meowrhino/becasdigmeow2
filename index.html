@@ -5,33 +5,37 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>meowrhino · desarrollo web y digitalización</title>
-  
+
   <!-- seo meta tags -->
-  <meta name="description" content="portfolio de diseño, programación y desarrollo web de manu meowrhino. proyectos creativos de digitalización y soluciones digitales personalizadas.">
-  <meta name="keywords" content="portfolio, desarrollo web, diseño web, programación, meowrhino, manu, becas digitalización">
+  <meta name="description"
+    content="portfolio de diseño, programación y desarrollo web de manu meowrhino. proyectos creativos de digitalización y soluciones digitales personalizadas.">
+  <meta name="keywords"
+    content="portfolio, desarrollo web, diseño web, programación, meowrhino, manu, becas digitalización">
   <meta name="author" content="manu meowrhino">
-  
+
   <!-- canonical url -->
   <link rel="canonical" href="https://meowrhino.github.io/becasDigMeow/">
-  
+
   <!-- open graph / facebook / linkedin -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://meowrhino.github.io/becasDigMeow/">
   <meta property="og:title" content="meowrhino · desarrollo web y digitalización">
-  <meta property="og:description" content="portfolio de diseño, programación y desarrollo web de manu meowrhino. proyectos creativos de digitalización y soluciones digitales personalizadas.">
+  <meta property="og:description"
+    content="portfolio de diseño, programación y desarrollo web de manu meowrhino. proyectos creativos de digitalización y soluciones digitales personalizadas.">
   <meta property="og:image" content="https://meowrhino.github.io/becasDigMeow/img/og-image.jpeg">
   <meta property="og:locale" content="es_ES">
   <meta property="og:locale:alternate" content="ca_ES">
   <meta property="og:locale:alternate" content="en_GB">
   <meta property="og:locale:alternate" content="fr_FR">
-  
+
   <!-- twitter -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:url" content="https://meowrhino.github.io/becasDigMeow/">
   <meta name="twitter:title" content="meowrhino · desarrollo web y digitalización">
-  <meta name="twitter:description" content="portfolio de diseño, programación y desarrollo web de manu meowrhino. proyectos creativos de digitalización y soluciones digitales personalizadas.">
+  <meta name="twitter:description"
+    content="portfolio de diseño, programación y desarrollo web de manu meowrhino. proyectos creativos de digitalización y soluciones digitales personalizadas.">
   <meta name="twitter:image" content="https://meowrhino.github.io/becasDigMeow/img/og-image.jpeg">
-  
+
   <!-- datos estructurados / schema.org -->
   <script type="application/ld+json">
   {
@@ -48,7 +52,7 @@
     ]
   }
   </script>
-  
+
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -76,14 +80,36 @@
 
     /* 🌞 light */
     html[data-theme="light"] {
-      --bg: #e7c97e;
-      --text: #42302A;
-      --accent: #FFE9C7;
-      --clouds: #BC544C;
+      --bg: #F7F7F7;
+      --text: #333333;
+      --accent: #FCC61D;
+      --clouds: #C59560;
+    }
+
+html[data-theme="dark"] {
+  --bg: #05040A;     /* casi negro, con toque violáceo */
+  --text: #EAE3F2;   /* gris muy claro algo liloso */
+  --accent: #B75CFF; /* morado vivo = “sol nocturno” */
+  --clouds: #6F4C7B; /* marrón-violeta, eco del #C59560 */
+}
+
+    /* 🌙 dark */
+    html[data-theme="dark_blue"] {
+      --bg: #080808;
+      --text: #CCCCCC;
+      --accent: #0339E2;
+      --clouds: #3A6A9F;
+    }
+
+    html[data-theme="dark_green"] {
+      --bg: #01471D;
+      --text: #FFECC4;
+      --accent: #F38805;
+      --clouds: #001006;
     }
 
     /* 🌙 dark */
-    html[data-theme="dark"] {
+    html[data-theme="dark2"] {
       --bg: #221E33;
       --text: #FFD66B;
       --accent: #F17150;
@@ -450,6 +476,7 @@
         padding-inline: 6px;
       }
     }
+
     /* limpia el fondo y el padding de los hijos header/footer de .header-cloud */
     .header-cloud>header,
     .header-cloud>footer {
@@ -479,7 +506,10 @@
       text-align: center;
       position: relative;
     }
-    .web-card { touch-action: manipulation; }
+
+    .web-card {
+      touch-action: manipulation;
+    }
 
     .web-preview {
       position: relative;
@@ -654,7 +684,7 @@
     .web-card:hover .temp-layer {
       opacity: 0 !important;
     }
-    
+
     .web-card:hover .web-texto {
       opacity: 1 !important;
     }
@@ -663,12 +693,14 @@
     .web-card.show-text .img-ordenador,
     .web-card.show-text .img-movil {
       opacity: 0 !important;
-      pointer-events: none; /* evita que capten el toque cuando están ocultas */
+      pointer-events: none;
+      /* evita que capten el toque cuando están ocultas */
     }
 
     .web-card.show-text .web-texto {
       opacity: 1 !important;
-      pointer-events: auto; /* permite que el toque caiga sobre el texto visible */
+      pointer-events: auto;
+      /* permite que el toque caiga sobre el texto visible */
     }
 
     /* === Slideshow: respirar + fade === */
@@ -687,15 +719,24 @@
     }
 
     @keyframes breatheShift {
-      0%   { transform: translateX(-50%) scale(1); }
-      50%  { transform: translateX(-50%) scale(1.06); }
-      100% { transform: translateX(-50%) scale(1); }
+      0% {
+        transform: translateX(-50%) scale(1);
+      }
+
+      50% {
+        transform: translateX(-50%) scale(1.06);
+      }
+
+      100% {
+        transform: translateX(-50%) scale(1);
+      }
     }
 
     /* solo las imágenes respiran, no el texto */
     .img-ordenador.breathing {
       animation: breathe 900ms cubic-bezier(0.25, 0.1, 0.25, 1.0);
     }
+
     .img-movil.breathing {
       animation: breatheShift 900ms cubic-bezier(0.25, 0.1, 0.25, 1.0);
     }
@@ -1430,7 +1471,7 @@
         const mob = card.querySelector('.img-movil');
         let cur = 0;
 
-        function preload(src){ const im = new Image(); im.decoding='async'; im.loading='eager'; im.src = src; }
+        function preload(src) { const im = new Image(); im.decoding = 'async'; im.loading = 'eager'; im.src = src; }
 
         function advance() {
           if (!card.__visible || document.hidden) return;
@@ -1439,10 +1480,10 @@
           setTimeout(() => { desk.classList.remove('breathing'); mob.classList.remove('breathing'); }, 900);
           const next = (cur + 1) % qty;
           preload(makeSrc(folder, 'ordenador', next, qty));
-          preload(makeSrc(folder, 'movil',     next, qty));
+          preload(makeSrc(folder, 'movil', next, qty));
           cur = next;
           swapSrcWithFade(desk, makeSrc(folder, 'ordenador', cur, qty));
-          swapSrcWithFade(mob,  makeSrc(folder, 'movil',     cur, qty));
+          swapSrcWithFade(mob, makeSrc(folder, 'movil', cur, qty));
         }
 
         setTimeout(() => {

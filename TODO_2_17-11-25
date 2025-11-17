@@ -1,0 +1,21 @@
+# TODO_2_17-11-25
+
+## Análisis UX/UI beca digitalización meowrhino
+
+### Qué funciona
+- La nube-hero con CTA "¡quiero una web!" crea un hito visual fuerte y concentra la acción principal.
+- Fondo animado + detección horaria para el tema aportan narrativa y diferenciación.
+- Selector ES/EN/FR/CAT actualiza `<html lang>`, `<title>` y la galería desde un único dataset.
+- Galería dinámica centraliza mantenimiento y mantiene consistencia visual; microinteracciones aportan carácter artesanal.
+
+### Riesgos / acciones sugeridas
+1. **Legibilidad**: Inknut Antiqua para todo el body + párrafos largos cansan; usar sans para texto corrido, limitar anchura, resumir secciones y mezclar bullets destacados.
+2. **Flujo y CTAs**: Tras el hero no hay llamadas intermedias; añadir navegación fija (Proceso/Precio/Entregas/Portfolio/Contacto) y micro-CTAs por sección (reserva llamada, descarga checklist, etc.).
+3. **Multilenguaje incompleto**: El toggle sólo traduce hero, primer bloque y galería; completar textos o limitar el selector hasta disponer de las traducciones.
+4. **Controles poco claros**: Botones ☁️‼️/🌙 y “ES” no explican su función; añadir etiquetas, mostrar idiomas disponibles y reubicar el panel fuera del hero.
+5. **Portfolio poco accesible**: Copy oculto tras hover/tap y carrusel automático sin controles; mostrar resumen visible siempre, añadir navegación manual y respetar `prefers-reduced-motion`.
+6. **Accesibilidad visual/rendimiento**: Contraste bajo en CTA del tema claro (#FCC61D sobre #F7F7F7 ≈1.48:1) y demasiadas nubes animadas en mobile; ajustar paleta y reducir/permitir desactivar animaciones.
+
+### Próximos pasos
+- Prototipo mobile-first con nueva jerarquía tipográfica y CTAs contextuales.
+- Definir alcance del selector de idioma: completarlo con todo el contenido o retirarlo hasta tener los textos.
