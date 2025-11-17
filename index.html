@@ -496,7 +496,7 @@ html[data-theme="dark"] {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 4rem;
+      gap: 5rem;
       max-width: 1000px;
 
       margin-top: 10vh;
@@ -546,24 +546,6 @@ html[data-theme="dark"] {
     .web-preview.movil-derecha .img-movil {
       right: 5%;
     }
-
-
-
-    .ver-web {
-      display: inline-block;
-      margin-top: 3rem;
-      font-weight: bold;
-      color: var(--accent);
-      text-decoration: none;
-      font-size: 1.2em;
-      transition: color 0.3s, text-decoration 0.3s;
-    }
-
-    .ver-web:hover {
-      color: var(--text);
-      text-decoration: underline;
-    }
-
     footer {
       text-align: center;
     }
@@ -646,61 +628,18 @@ html[data-theme="dark"] {
       opacity: 0;
     }
 
-    /* capa temporal para crossfade continuo */
-    .temp-layer {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: auto;
-      pointer-events: none;
-    }
-
-    /* el texto crece SOLO en hover */
     .web-texto {
-      transform: scale(1);
-      transition: opacity 0.4s ease, transform 220ms ease;
-    }
-
-    .web-card:hover .web-texto {
-      transform: scale(1.04);
-    }
-
-    .web-texto {
-      position: absolute;
-      z-index: 2;
-      opacity: 0;
+      margin-top: 3rem;
+      padding: 0 2.5rem;
       text-align: center;
-      padding: 20px;
       color: var(--text);
       font-size: 1rem;
-      line-height: 1.4;
-      pointer-events: none;
-      transition: opacity 0.4s ease;
+      line-height: 1.6;
+      text-shadow: var(--text-shadow);
     }
 
-    .web-card:hover .img-ordenador,
-    .web-card:hover .img-movil,
-    .web-card:hover .temp-layer {
-      opacity: 0 !important;
-    }
-
-    .web-card:hover .web-texto {
-      opacity: 1 !important;
-    }
-
-    /* Touch toggle: simula :hover en móvil */
-    .web-card.show-text .img-ordenador,
-    .web-card.show-text .img-movil {
-      opacity: 0 !important;
-      pointer-events: none;
-      /* evita que capten el toque cuando están ocultas */
-    }
-
-    .web-card.show-text .web-texto {
-      opacity: 1 !important;
-      pointer-events: auto;
-      /* permite que el toque caiga sobre el texto visible */
+    .web-texto a {
+      color: var(--accent);
     }
 
     /* === Slideshow: respirar + fade === */
@@ -1213,10 +1152,10 @@ html[data-theme="dark"] {
         link: "https://meowrhino.github.io/andreacarilla/",
         movilPos: "left",
         imgQuantity: 5,
-        textoES: "portfolio online y archivo de la fotógrafa <a href='https://meowrhino.github.io/andreacarilla/'>andrea carilla</a>. La página principal se divide en una galería y una nube de links con opciones de filtrado por categorías.",
-        textoEN: "online portfolio and archive of photographer <a href='https://meowrhino.github.io/andreacarilla/'>andrea carilla</a>. The homepage combines a gallery with a link cloud and category filters.",
-        textoFR: "portfolio en ligne et archive de la photographe <a href='https://meowrhino.github.io/andreacarilla/'>andrea carilla</a>. La page d’accueil mêle une galerie et un nuage de liens avec des filtres par catégorie.",
-        textoCAT: "portfolio en línia i arxiu de la fotògrafa <a href='https://meowrhino.github.io/andreacarilla/'>andrea carilla</a>. La portada combina una galeria i un núvol d’enllaços amb filtres per categories."
+        textoES: "portfolio online y archivo de la fotógrafa <a target='_blank' href='https://meowrhino.github.io/andreacarilla/'>andrea carilla</a>. La página principal se divide en una galería y una nube de links con opciones de filtrado por categorías.",
+        textoEN: "online portfolio and archive of photographer <a target='_blank' href='https://meowrhino.github.io/andreacarilla/'>andrea carilla</a>. The homepage combines a gallery with a link cloud and category filters.",
+        textoFR: "portfolio en ligne et archive de la photographe <a target='_blank' href='https://meowrhino.github.io/andreacarilla/'>andrea carilla</a>. La page d’accueil mêle une galerie et un nuage de liens avec des filtres par catégorie.",
+        textoCAT: "portfolio en línia i arxiu de la fotògrafa <a target='_blank' href='https://meowrhino.github.io/andreacarilla/'>andrea carilla</a>. La portada combina una galeria i un núvol d’enllaços amb filtres per categories."
       },
 
       {
@@ -1225,10 +1164,10 @@ html[data-theme="dark"] {
         link: "https://meowrhino.github.io/snerta/",
         movilPos: "left",
         imgQuantity: 6,
-        textoES: "archivo profesional de la curadora <a href='https://meowrhino.github.io/snerta/'>berta esteve</a> que se divide en una home scrolleable y un archivo de proyectos que puede actualizar ella misma.",
-        textoEN: "professional archive of curator <a href='https://meowrhino.github.io/snerta/'>berta esteve</a>, featuring a scrollable home and a project archive she can update herself.",
-        textoFR: "archives professionnelles de la curatrice <a href='https://meowrhino.github.io/snerta/'>berta esteve</a>, avec une page d’accueil défilante et un archive de projets qu’elle peut mettre à jour.",
-        textoCAT: "arxiu professional de la curadora <a href='https://meowrhino.github.io/snerta/'>berta esteve</a>, amb una home desplaçable i un arxiu de projectes que pot actualitzar ella mateixa."
+        textoES: "archivo profesional de la curadora <a target='_blank' href='https://meowrhino.github.io/snerta/'>berta esteve</a> que se divide en una home scrolleable y un archivo de proyectos que puede actualizar ella misma.",
+        textoEN: "professional archive of curator <a target='_blank' href='https://meowrhino.github.io/snerta/'>berta esteve</a>, featuring a scrollable home and a project archive she can update herself.",
+        textoFR: "archives professionnelles de la curatrice <a target='_blank' href='https://meowrhino.github.io/snerta/'>berta esteve</a>, avec une page d’accueil défilante et un archive de projets qu’elle peut mettre à jour.",
+        textoCAT: "arxiu professional de la curadora <a target='_blank' href='https://meowrhino.github.io/snerta/'>berta esteve</a>, amb una home desplaçable i un arxiu de projectes que pot actualitzar ella mateixa."
       },
 
       {
@@ -1237,10 +1176,10 @@ html[data-theme="dark"] {
         link: "https://meowrhino.github.io/christine/",
         movilPos: "left",
         imgQuantity: 4,
-        textoES: "web brújula para explorar el universo de <a href='https://meowrhino.github.io/christine/'>christine</a>. Los proyectos se disponen en coordenadas en 4 ejes y se eligen 2 para poblar el gráfico.",
-        textoEN: "compass-like website to explore <a href='https://meowrhino.github.io/christine/'>christine</a>’s universe. Projects live on four axes; two are chosen to populate the chart.",
-        textoFR: "site-boussole pour explorer l’univers de <a href='https://meowrhino.github.io/christine/'>christine</a>. Les projets se placent sur 4 axes et deux alimentent le graphique.",
-        textoCAT: "web brúixola per explorar l’univers de <a href='https://meowrhino.github.io/christine/'>christine</a>. Els projectes es distribueixen en 4 eixos i se’n trien 2 per poblar el gràfic."
+        textoES: "web brújula para explorar el universo de <a target='_blank' href='https://meowrhino.github.io/christine/'>christine</a>. Los proyectos se disponen en coordenadas en 4 ejes y se eligen 2 para poblar el gráfico.",
+        textoEN: "compass-like website to explore <a target='_blank' href='https://meowrhino.github.io/christine/'>christine</a>’s universe. Projects live on four axes; two are chosen to populate the chart.",
+        textoFR: "site-boussole pour explorer l’univers de <a target='_blank' href='https://meowrhino.github.io/christine/'>christine</a>. Les projets se placent sur 4 axes et deux alimentent le graphique.",
+        textoCAT: "web brúixola per explorar l’univers de <a target='_blank' href='https://meowrhino.github.io/christine/'>christine</a>. Els projectes es distribueixen en 4 eixos i se’n trien 2 per poblar el gràfic."
       },
 
       {
@@ -1249,10 +1188,10 @@ html[data-theme="dark"] {
         link: "https://meowrhino.github.io/mikesx/",
         movilPos: "left",
         imgQuantity: 5,
-        textoES: "portfolio temático del diseñador gráfico <a href='https://meowrhino.github.io/mikesx/'>mikesx</a>. La home simula una stack de CD's que se repite infinitamente, cada uno contiene una galería con sus imágenes",
-        textoEN: "thematic portfolio of graphic designer <a href='https://meowrhino.github.io/mikesx/'>mikesx</a>. The homepage simulates an infinite stack of CDs, each containing a gallery with his images.",
-        textoFR: "portfolio thématique du graphiste <a href='https://meowrhino.github.io/mikesx/'>mikesx</a>. La page d’accueil simule une pile infinie de CD, chacun contenant une galerie avec ses images.",
-        textoCAT: "portfolio temàtic del dissenyador gràfic <a href='https://meowrhino.github.io/mikesx/'>mikesx</a>. La portada simula una pila infinita de CD's, cadascun amb una galeria amb les seves imatges."
+        textoES: "portfolio temático del diseñador gráfico <a target='_blank' href='https://meowrhino.github.io/mikesx/'>mikesx</a>. La home simula una stack de CD's que se repite infinitamente, cada uno contiene una galería con sus imágenes",
+        textoEN: "thematic portfolio of graphic designer <a target='_blank' href='https://meowrhino.github.io/mikesx/'>mikesx</a>. The homepage simulates an infinite stack of CDs, each containing a gallery with his images.",
+        textoFR: "portfolio thématique du graphiste <a target='_blank' href='https://meowrhino.github.io/mikesx/'>mikesx</a>. La page d’accueil simule une pile infinie de CD, chacun contenant une galerie avec ses images.",
+        textoCAT: "portfolio temàtic del dissenyador gràfic <a target='_blank' href='https://meowrhino.github.io/mikesx/'>mikesx</a>. La portada simula una pila infinita de CD's, cadascun amb una galeria amb les seves imatges."
       },
 
       {
@@ -1261,10 +1200,10 @@ html[data-theme="dark"] {
         link: "https://meowrhino.github.io/e300/",
         movilPos: "left",
         imgQuantity: 7,
-        textoES: "web oficial del colectivo <a href='https://meowrhino.github.io/e300/'>estructuras3000</a>.",
-        textoEN: "official website of the collective <a href='https://meowrhino.github.io/e300/'>estructuras3000</a>.",
-        textoFR: "site officiel du collectif <a href='https://meowrhino.github.io/e300/'>estructuras3000</a>.",
-        textoCAT: "web oficial del col·lectiu <a href='https://meowrhino.github.io/e300/'>estructuras3000</a>."
+        textoES: "web oficial del colectivo <a target='_blank' href='https://meowrhino.github.io/e300/'>estructuras3000</a>.",
+        textoEN: "official website of the collective <a target='_blank' href='https://meowrhino.github.io/e300/'>estructuras3000</a>.",
+        textoFR: "site officiel du collectif <a target='_blank' href='https://meowrhino.github.io/e300/'>estructuras3000</a>.",
+        textoCAT: "web oficial del col·lectiu <a target='_blank' href='https://meowrhino.github.io/e300/'>estructuras3000</a>."
       },
 
       {
@@ -1273,10 +1212,10 @@ html[data-theme="dark"] {
         link: "https://meowrhino.github.io/anakatana/",
         movilPos: "left",
         imgQuantity: 7,
-        textoES: "ecommerce funcional para la tienda <a href='https://meowrhino.github.io/anakatana/'>hifas studio</a> con panel de administración, registro de transacciones y cobros vía Stripe.",
-        textoEN: "functional ecommerce for <a href='https://meowrhino.github.io/anakatana/'>hifas studio</a> with admin panel, transaction logging and Stripe payments.",
-        textoFR: "e-commerce fonctionnel pour <a href='https://meowrhino.github.io/anakatana/'>hifas studio</a> avec panneau d’admin, journal des transactions et paiements Stripe.",
-        textoCAT: "ecommerce funcional per a <a href='https://meowrhino.github.io/anakatana/'>hifas studio</a> amb panell d’administració, registre de transaccions i pagaments amb Stripe."
+        textoES: "ecommerce funcional para la tienda <a target='_blank' href='https://meowrhino.github.io/anakatana/'>hifas studio</a> con panel de administración, registro de transacciones y cobros vía Stripe.",
+        textoEN: "functional ecommerce for <a target='_blank' href='https://meowrhino.github.io/anakatana/'>hifas studio</a> with admin panel, transaction logging and Stripe payments.",
+        textoFR: "e-commerce fonctionnel pour <a target='_blank' href='https://meowrhino.github.io/anakatana/'>hifas studio</a> avec panneau d’admin, journal des transactions et paiements Stripe.",
+        textoCAT: "ecommerce funcional per a <a target='_blank' href='https://meowrhino.github.io/anakatana/'>hifas studio</a> amb panell d’administració, registre de transaccions i pagaments amb Stripe."
       },
 
       {
@@ -1285,10 +1224,10 @@ html[data-theme="dark"] {
         link: "https://meowrhino.github.io/jaumeclotet/",
         movilPos: "left",
         imgQuantity: 4,
-        textoES: "página oficial del artista <a href='https://meowrhino.github.io/jaumeclotet/'>jaumeclotet</a> donde se destacan 6 proyectos de su archivo y una sorpresa cuando has visto todos.",
-        textoEN: "official page of artist <a href='https://meowrhino.github.io/jaumeclotet/'>jaumeclotet</a>, highlighting 6 archive projects and a surprise once you’ve seen them all.",
-        textoFR: "page officielle de l’artiste <a href='https://meowrhino.github.io/jaumeclotet/'>jaumeclotet</a> avec 6 projets mis en avant et une surprise quand tu les as tous vus.",
-        textoCAT: "pàgina oficial de l’artista <a href='https://meowrhino.github.io/jaumeclotet/'>jaumeclotet</a> amb 6 projectes destacats i una sorpresa quan els hagis vist tots."
+        textoES: "página oficial del artista <a target='_blank' href='https://meowrhino.github.io/jaumeclotet/'>jaumeclotet</a> donde se destacan 6 proyectos de su archivo y una sorpresa cuando has visto todos.",
+        textoEN: "official page of artist <a target='_blank' href='https://meowrhino.github.io/jaumeclotet/'>jaumeclotet</a>, highlighting 6 archive projects and a surprise once you’ve seen them all.",
+        textoFR: "page officielle de l’artiste <a target='_blank' href='https://meowrhino.github.io/jaumeclotet/'>jaumeclotet</a> avec 6 projets mis en avant et une surprise quand tu les as tous vus.",
+        textoCAT: "pàgina oficial de l’artista <a target='_blank' href='https://meowrhino.github.io/jaumeclotet/'>jaumeclotet</a> amb 6 projectes destacats i una sorpresa quan els hagis vist tots."
       },
 
       {
@@ -1297,10 +1236,10 @@ html[data-theme="dark"] {
         link: "https://meowrhino.github.io/rikamichie/",
         movilPos: "left",
         imgQuantity: 7,
-        textoES: "sitio web de <a href='https://meowrhino.github.io/rikamichie/'>rikamichie</a> donde se combinan todas sus disciplinas en una cruz navegable dividida en 6 pantallas.",
-        textoEN: "website of <a href='https://meowrhino.github.io/rikamichie/'>rikamichie</a> combining all her disciplines in a navigable cross split into 6 screens.",
-        textoFR: "site de <a href='https://meowrhino.github.io/rikamichie/'>rikamichie</a> combinant toutes ses disciplines dans une croix navigable en 6 écrans.",
-        textoCAT: "lloc web de <a href='https://meowrhino.github.io/rikamichie/'>rikamichie</a> on es combinen totes les seves disciplines en una creu navegable dividida en 6 pantalles."
+        textoES: "sitio web de <a target='_blank' href='https://meowrhino.github.io/rikamichie/'>rikamichie</a> donde se combinan todas sus disciplinas en una cruz navegable dividida en 6 pantallas.",
+        textoEN: "website of <a target='_blank' href='https://meowrhino.github.io/rikamichie/'>rikamichie</a> combining all her disciplines in a navigable cross split into 6 screens.",
+        textoFR: "site de <a target='_blank' href='https://meowrhino.github.io/rikamichie/'>rikamichie</a> combinant toutes ses disciplines dans une croix navigable en 6 écrans.",
+        textoCAT: "lloc web de <a target='_blank' href='https://meowrhino.github.io/rikamichie/'>rikamichie</a> on es combinen totes les seves disciplines en una creu navegable dividida en 6 pantalles."
       },
 
       {
@@ -1309,10 +1248,10 @@ html[data-theme="dark"] {
         link: "https://meowrhino.github.io/villagranota/",
         movilPos: "left",
         imgQuantity: 6,
-        textoES: "statement online del colectivo <a href='https://meowrhino.github.io/villagranota/'>villagranota</a> por el código libre, divertido y honesto. Un pequeño estanque digital.",
-        textoEN: "online statement of the collective <a href='https://meowrhino.github.io/villagranota/'>villagranota</a> for free, fun and honest code. A small digital pond.",
-        textoFR: "déclaration en ligne du collectif <a href='https://meowrhino.github.io/villagranota/'>villagranota</a> pour un code libre, ludique et honnête. Un petit étang numérique.",
-        textoCAT: "manifest en línia del col·lectiu <a href='https://meowrhino.github.io/villagranota/'>villagranota</a> pel codi lliure, divertit i honest. Un petit estany digital."
+        textoES: "statement online del colectivo <a target='_blank' href='https://meowrhino.github.io/villagranota/'>villagranota</a> por el código libre, divertido y honesto. Un pequeño estanque digital.",
+        textoEN: "online statement of the collective <a target='_blank' href='https://meowrhino.github.io/villagranota/'>villagranota</a> for free, fun and honest code. A small digital pond.",
+        textoFR: "déclaration en ligne du collectif <a target='_blank' href='https://meowrhino.github.io/villagranota/'>villagranota</a> pour un code libre, ludique et honnête. Un petit étang numérique.",
+        textoCAT: "manifest en línia del col·lectiu <a target='_blank' href='https://meowrhino.github.io/villagranota/'>villagranota</a> pel codi lliure, divertit i honest. Un petit estany digital."
       },
 
       {
@@ -1321,15 +1260,14 @@ html[data-theme="dark"] {
         link: "https://elmundodelasjordis.com/",
         movilPos: "left",
         imgQuantity: 5,
-        textoES: "página oficial de <a href='https://elmundodelasjordis.com/'>las jordis</a>. Contiene 4 secciones con editores de texto integrados para que podamos seguir 'keeping up' con sus aventuras.",
-        textoEN: "official page of <a href='https://elmundodelasjordis.com/'>las jordis</a>. It contains four sections with integrated text editors so we can keep up with their adventures.",
-        textoFR: "page officielle de <a href='https://elmundodelasjordis.com/'>las jordis</a>. Elle comporte quatre sections avec des éditeurs de texte intégrés pour que nous puissions suivre leurs aventures.",
-        textoCAT: "pàgina oficial de <a href='https://elmundodelasjordis.com/'>les jordis</a>. Conté quatre seccions amb editors de text integrats perquè puguem seguir les seves aventures."
+        textoES: "página oficial de <a target='_blank' href='https://elmundodelasjordis.com/'>las jordis</a>. Contiene 4 secciones con editores de texto integrados para que podamos seguir 'keeping up' con sus aventuras.",
+        textoEN: "official page of <a target='_blank' href='https://elmundodelasjordis.com/'>las jordis</a>. It contains four sections with integrated text editors so we can keep up with their adventures.",
+        textoFR: "page officielle de <a target='_blank' href='https://elmundodelasjordis.com/'>las jordis</a>. Elle comporte quatre sections avec des éditeurs de texte intégrés pour que nous puissions suivre leurs aventures.",
+        textoCAT: "pàgina oficial de <a target='_blank' href='https://elmundodelasjordis.com/'>les jordis</a>. Conté quatre seccions amb editors de text integrats perquè puguem seguir les seves aventures."
       }
     ];
 
     const LANGS = ['ES', 'EN', 'FR', 'CAT'];
-    const galleryVerb = { ES: 'ver', EN: 'view', FR: 'voir', CAT: 'veure' };
 
     const textosMain = {
       ES: {
@@ -1365,7 +1303,6 @@ html[data-theme="dark"] {
         const article = document.createElement('article');
         article.className = 'web-card';
         const texto = web[`texto${lang}`] || web.textoES || '';
-        const verb = galleryVerb[lang] || galleryVerb.ES;
         const altDesktop = {
           ES: `vista escritorio de ${web.nombre}`,
           EN: `desktop view of ${web.nombre}`,
@@ -1391,38 +1328,11 @@ html[data-theme="dark"] {
       <div class="web-preview ${web.movilPos === 'right' ? 'movil-derecha' : 'movil-izquierda'}" data-folder="${web.carpeta}" data-qty="${qty}">
         <img src="${ordenadorImg}" alt="${altDesktop}" class="img-ordenador img-fade" loading="lazy" decoding="async" onerror="this.src='galeria/_placeholder/ordenador.png';">
         <img src="${movilImg}" alt="${altMobile}" class="img-movil img-fade" loading="lazy" decoding="async" onerror="this.src='galeria/_placeholder/movil.png';">
-        <div class="web-texto">${texto}</div>
       </div>
-      <a href="${web.link}" target="_blank" rel="noopener noreferrer" class="ver-web">${verb} ${web.nombre}</a>
+      <div class="web-texto">${texto}</div>
     `;
         contenedor.appendChild(article);
-        // Soporte móvil: toque = alternar texto (si no se hace click en el enlace)
-        const prefersNoHover = window.matchMedia && window.matchMedia('(hover: none)').matches;
-        if (prefersNoHover) {
-          const handler = (ev) => {
-            if (ev.target.closest('a.ver-web')) return; // deja navegar al link
-            if (ev.type === 'pointerup') ev.preventDefault();
-            ev.stopPropagation();
-            const isOpen = article.classList.contains('show-text');
-            document.querySelectorAll('.web-card.show-text').forEach(el => {
-              if (el !== article) el.classList.remove('show-text');
-            });
-            article.classList.toggle('show-text', !isOpen);
-          };
-          article.addEventListener('pointerup', handler, { passive: false });
-          article.addEventListener('click', handler, { passive: false });
-        }
       });
-      // Cierre global fuera de la galería para móviles
-      if (window.matchMedia && window.matchMedia('(hover: none)').matches) {
-        const closer = (ev) => {
-          if (!ev.target.closest('.web-card')) {
-            document.querySelectorAll('.web-card.show-text').forEach(el => el.classList.remove('show-text'));
-          }
-        };
-        document.addEventListener('pointerup', closer);
-        document.addEventListener('click', closer);
-      }
     }
 
     // ==========================
