@@ -1053,31 +1053,34 @@
 
       const CITY_TIMEZONE = 'Europe/Madrid';
       const SUNLIGHT_DATA_URL = 'data/sunlight.json';
+      const madridFormatter = new Intl.DateTimeFormat('en-CA', {
+        timeZone: CITY_TIMEZONE,
+        hour12: false,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
 
-      function getMadridNow() {
-        const formatter = new Intl.DateTimeFormat('en-CA', {
-          timeZone: CITY_TIMEZONE,
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit'
-        });
-        const parts = formatter.formatToParts(new Date()).reduce((acc, part) => {
+      function partsToObj(parts) {
+        return parts.reduce((acc, part) => {
           if (part.type !== 'literal') acc[part.type] = part.value;
           return acc;
         }, {});
+      }
+
+      function getMadridNow() {
+        const parts = partsToObj(madridFormatter.formatToParts(new Date()));
         const isoDate = `${parts.year}-${parts.month}-${parts.day}`;
-        const localDate = new Date(Date.UTC(
-          Number(parts.year),
-          Number(parts.month) - 1,
-          Number(parts.day),
-          Number(parts.hour),
-          Number(parts.minute),
-          Number(parts.second)
-        ));
-        return { isoDate, localDate };
+        const seconds = (Number(parts.hour) * 3600) + (Number(parts.minute) * 60) + Number(parts.second);
+        return { isoDate, seconds };
+      }
+
+      function getMadridSecondsFromUtc(utcString) {
+        const parts = partsToObj(madridFormatter.formatToParts(new Date(utcString)));
+        return (Number(parts.hour) * 3600) + (Number(parts.minute) * 60) + Number(parts.second);
       }
 
       async function checkSunBarcelona() {
@@ -1085,14 +1088,14 @@
           const res = await fetch(SUNLIGHT_DATA_URL, { cache: 'no-cache' });
           if (!res.ok) throw new Error(`sunlight.json responded ${res.status}`);
           const payload = await res.json();
-          const { isoDate, localDate } = getMadridNow();
+          const { isoDate, seconds: nowSeconds } = getMadridNow();
           const info = payload?.days?.[isoDate];
           if (!info || !info.sunriseUtc || !info.sunsetUtc) {
             throw new Error(`Missing sunlight data for ${isoDate}`);
           }
-          const sunrise = new Date(info.sunriseUtc);
-          const sunset = new Date(info.sunsetUtc);
-          const isDaylight = localDate >= sunrise && localDate < sunset;
+          const sunriseSeconds = getMadridSecondsFromUtc(info.sunriseUtc);
+          const sunsetSeconds = getMadridSecondsFromUtc(info.sunsetUtc);
+          const isDaylight = nowSeconds >= sunriseSeconds && nowSeconds < sunsetSeconds;
           applyTheme(isDaylight ? 'light' : 'dark');
         } catch (err) {
           console.warn('⚠️ No se pudo leer sunlight.json, usando hora local', err);
