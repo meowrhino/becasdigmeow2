@@ -26,6 +26,9 @@
 3. [ ] Iterar la galería: soporte de múltiples imágenes por proyecto con precarga, fade respirando, `IntersectionObserver` para pausar fuera de viewport y respeto a `prefers-reduced-motion`.
 4. [ ] Alinear los controles flotantes (tema, nubes, idioma) con labels claros, tooltips/`aria-label`, y mantenerlos fijos sin saltos en iOS (`viewport-fit=cover`, `env(safe-area-*)`).
 5. [ ] Añadir/actualizar la sección “Proceso / Cobro” con textos i18n y pequeños CTA contextuales (reserva llamada, descarga checklist, etc.).
+6. [ ] Renderizar las cards de proyectos con `createElement`/`textContent` en lugar de plantillas concatenadas para crecer sin XSS ni duplicar markup.
+7. [ ] Guardar los IDs de `setInterval` de la galería y detenerlos (`clearInterval`) cuando el `IntersectionObserver` saque la card del viewport para evitar consumo extra.
+8. [ ] Reutilizar (o desconectar al terminar) un único `IntersectionObserver` cuando se reconfigure el slideshow para no acumular entradas antiguas.
 
 ## 5. Performance, accesibilidad y mantenimiento
 1. [ ] Optimizar `galeria/`: exportar WebP/AVIF, añadir `srcset`/`sizes`, limitar anchura real y medir peso antes/después (`du -h`).
@@ -35,3 +38,5 @@
 5. [ ] Revisar contrastes WCAG AA en todos los temas (especialmente CTA amarilla en modo claro) y ajustar paleta si es necesario.
 6. [ ] Ejecutar checklist de QA: mobile-first, anchors, dark/light, idioma persistente, `aria-live` donde corresponda, slideshow sin parpadeos, animaciones pausadas fuera de viewport, `.gitignore` limpio.
 7. [ ] Documentar en el repo (README o `/docs`) los toggles disponibles (tema, idioma, nubes, ticker) y cómo desactivar los “juguetes” en caso de necesitar un modo focus.
+8. [ ] Hacer `makeSrc` tolerante a extensiones variadas (dataset con extensión real o fallback automático mediante `Image.decode`/`fetch`) para evitar 404 silenciosos.
+9. [ ] Cachear `data/sunlight.json` en `localStorage` con timestamp y reutilizarlo durante unas horas para reducir fetchs repetidos.
