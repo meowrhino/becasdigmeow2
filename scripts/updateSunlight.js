@@ -21,8 +21,12 @@ function addDaysUTC(date, days) {
 }
 
 function parseDayLength(lengthStr) {
-  const [hours = '0', minutes = '0', seconds = '0'] = (lengthStr || '').split(':');
-  return (Number(hours) * 3600) + (Number(minutes) * 60) + Number(seconds);
+  const value = typeof lengthStr === 'string' ? lengthStr : String(lengthStr || '');
+  const parts = value.split(':');
+  const hours = Number(parts[0] || 0);
+  const minutes = Number(parts[1] || 0);
+  const seconds = Number(parts[2] || 0);
+  return (hours * 3600) + (minutes * 60) + seconds;
 }
 
 function getMadridYearMonth(date = new Date()) {
