@@ -40,3 +40,4 @@
 7. [ ] Documentar en el repo (README o `/docs`) los toggles disponibles (tema, idioma, nubes, ticker) y cómo desactivar los “juguetes” en caso de necesitar un modo focus.
 8. [x] Hacer `makeSrc` tolerante a extensiones variadas (dataset con extensión real o fallback automático mediante `Image.decode`/`fetch`) para evitar 404 silenciosos.
 9. [x] Cachear `data/sunlight.json` en `localStorage` con timestamp y reutilizarlo durante unas horas para reducir fetchs repetidos.
+10. [ ] Añadir marcado estructurado opcional para snippets: (a) bloque FAQPage con 3–5 preguntas/respuestas reales y visibles en la página; (b) Organization con logo/contacto/redes cuando se fije dominio y branding; (c) BreadcrumbList solo si se crean subpáginas.
