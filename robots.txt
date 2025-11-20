@@ -4,4 +4,4 @@ User-agent: *
 Allow: /
 
 # sitemap
-Sitemap: https://meowrhino.github.io/becasDigMeow/sitemap.xml
+Sitemap: https://meowrhino.github.io/becasdigmeow2/sitemap.xml
