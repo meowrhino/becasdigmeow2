@@ -34,10 +34,12 @@
 1. [ ] Optimizar `galeria/`: exportar WebP/AVIF, añadir `srcset`/`sizes`, limitar anchura real y medir peso antes/después (`du -h`).
 2. [ ] Reescribir el slideshow/fondo para ser ligero: reducir nubes (6–12 en móvil, menos cuando `prefers-reduced-motion`), ofrecer un modo estático y pausar animaciones cuando el usuario lo solicite.
 3. [ ] Cachear el tema en `localStorage` (último estado/clima) y aplicarlo antes del primer paint; usar `prefers-color-scheme` + hora local como fallback para evitar flashes.
-4. [ ] Separar CSS/JS en archivos (`styles/main.css`, `scripts/main.js`), servirlos con `defer`/`preload` y preparar el terreno para minificación/cache.
+4. [x] Separar CSS/JS en archivos (`styles/main.css`, `scripts/main.js`), servirlos con `defer`/`preload` y preparar el terreno para minificación/cache.
 5. [ ] Revisar contrastes WCAG AA en todos los temas (especialmente CTA amarilla en modo claro) y ajustar paleta si es necesario.
 6. [ ] Ejecutar checklist de QA: mobile-first, anchors, dark/light, idioma persistente, `aria-live` donde corresponda, slideshow sin parpadeos, animaciones pausadas fuera de viewport, `.gitignore` limpio.
 7. [ ] Documentar en el repo (README o `/docs`) los toggles disponibles (tema, idioma, nubes, ticker) y cómo desactivar los “juguetes” en caso de necesitar un modo focus.
 8. [x] Hacer `makeSrc` tolerante a extensiones variadas (dataset con extensión real o fallback automático mediante `Image.decode`/`fetch`) para evitar 404 silenciosos.
 9. [x] Cachear `data/sunlight.json` en `localStorage` con timestamp y reutilizarlo durante unas horas para reducir fetchs repetidos.
-10. [ ] Añadir marcado estructurado opcional para snippets: (a) bloque FAQPage con 3–5 preguntas/respuestas reales y visibles en la página; (b) Organization con logo/contacto/redes cuando se fije dominio y branding; (c) BreadcrumbList solo si se crean subpáginas.
+10. [ ] Completar marcado estructurado opcional para snippets: (a) bloque FAQPage con 3–5 preguntas/respuestas reales y visibles en la página; (b) BreadcrumbList solo si se crean subpáginas. (Organization ya añadido).
+11. [x] Implementar preload de fuentes y verificar FOUT/FOIT (ya añadido para Inknut; extender a otras fuentes si se suman).
+12. [ ] Validar rich results y previews sociales tras cada deploy (Google Rich Results, FB Sharing Debugger, Twitter Card Validator).
