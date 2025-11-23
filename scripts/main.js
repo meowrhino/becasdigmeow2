@@ -1,702 +1,785 @@
-    (() => {
-      // —————————————————————————
-      // 1) UTILIDADES
-      // —————————————————————————
+(() => {
+  // —————————————————————————
+  // 1) UTILIDADES
+  // —————————————————————————
 
-      const qs = (sel) => document.querySelector(sel);
-      const qsa = (sel) => Array.from(document.querySelectorAll(sel));
+  const qs = (sel) => document.querySelector(sel);
+  const qsa = (sel) => Array.from(document.querySelectorAll(sel));
 
-      // Genera un número aleatorio entre min y max
-      const randomBetween = (min, max) => Math.random() * (max - min) + min;
+  // Genera un número aleatorio entre min y max
+  const randomBetween = (min, max) => Math.random() * (max - min) + min;
 
-      // Función que genera parámetros aleatorios para las nubes
-      function getRandomCloudParams() {
-        let minW = randomBetween(40, 250);
-        let maxW = randomBetween(400, 600);
-        if (minW > maxW) [minW, maxW] = [maxW, minW];
+  // Función que genera parámetros aleatorios para las nubes
+  function getRandomCloudParams() {
+    let minW = randomBetween(40, 250);
+    let maxW = randomBetween(400, 600);
+    if (minW > maxW) [minW, maxW] = [maxW, minW];
 
-        // Detectar si es móvil (ancho menor a 600px)
-        const isMobile = window.innerWidth <= 600;
+    // Detectar si es móvil (ancho menor a 600px)
+    const isMobile = window.innerWidth <= 600;
 
-        const count = isMobile
-          ? Math.floor(randomBetween(30, 50))
-          : Math.floor(randomBetween(80, 120));
+    const count = isMobile
+      ? Math.floor(randomBetween(30, 50))
+      : Math.floor(randomBetween(80, 120));
 
-        return {
-          count,
-          minWidth: minW,
-          maxWidth: maxW,
-          durationRange: [
-            randomBetween(12, 20),
-            randomBetween(22, 30)
-          ]
-        };
+    return {
+      count,
+      minWidth: minW,
+      maxWidth: maxW,
+      durationRange: [randomBetween(12, 20), randomBetween(22, 30)],
+    };
+  }
+
+  // Vacía un contenedor de forma performante
+  function clearContainer(container) {
+    while (container.firstChild) {
+      container.removeChild(container.firstChild);
+    }
+  }
+
+  // —————————————————————————
+  // 2) GESTIÓN DE TEMA
+  // —————————————————————————
+
+  const themeBtn = qs("#toggleTheme");
+  const root = document.documentElement;
+
+  // Orden nuevo: de claro a oscuro
+  const themes = ["light", "dark"];
+  const emojis = {
+    light: "⚪️",
+    dark: "⚫️",
+  };
+
+  let currentThemeIndex = Math.max(
+    0,
+    themes.indexOf(root.getAttribute("data-theme"))
+  );
+
+  function applyTheme(theme) {
+    root.setAttribute("data-theme", theme);
+    themeBtn.textContent = emojis[theme] || "🎛️";
+    currentThemeIndex = themes.indexOf(theme);
+  }
+
+  themeBtn.addEventListener("click", () => {
+    currentThemeIndex = (currentThemeIndex + 1) % themes.length;
+    const nextTheme = themes[currentThemeIndex];
+    applyTheme(nextTheme);
+  });
+
+  const CITY_TIMEZONE = "Europe/Madrid";
+  const SUNLIGHT_DATA_URL = "data/sunlight.json";
+  const SUNLIGHT_CACHE_KEY = "sunlight:data";
+  const SUNLIGHT_CACHE_TTL_MS = 4 * 60 * 60 * 1000; // 4h
+  const madridFormatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: CITY_TIMEZONE,
+    hour12: false,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+
+  function partsToObj(parts) {
+    return parts.reduce((acc, part) => {
+      if (part.type !== "literal") acc[part.type] = part.value;
+      return acc;
+    }, {});
+  }
+
+  function getMadridNow() {
+    const parts = partsToObj(madridFormatter.formatToParts(new Date()));
+    const isoDate = `${parts.year}-${parts.month}-${parts.day}`;
+    const seconds =
+      Number(parts.hour) * 3600 +
+      Number(parts.minute) * 60 +
+      Number(parts.second);
+    return { isoDate, seconds };
+  }
+
+  function getMadridSecondsFromUtc(utcString) {
+    const parts = partsToObj(
+      madridFormatter.formatToParts(new Date(utcString))
+    );
+    return (
+      Number(parts.hour) * 3600 +
+      Number(parts.minute) * 60 +
+      Number(parts.second)
+    );
+  }
+
+  function getCachedSunlight({ allowExpired = false } = {}) {
+    try {
+      const raw = localStorage.getItem(SUNLIGHT_CACHE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed.timestamp !== "number" || !parsed.payload)
+        return null;
+      if (
+        !allowExpired &&
+        Date.now() - parsed.timestamp > SUNLIGHT_CACHE_TTL_MS
+      )
+        return null;
+      return parsed;
+    } catch (err) {
+      console.warn("⚠️ Cache de sunlight.json corrupta, se ignora", err);
+      return null;
+    }
+  }
+
+  function cacheSunlightPayload(payload) {
+    try {
+      const record = { timestamp: Date.now(), payload };
+      localStorage.setItem(SUNLIGHT_CACHE_KEY, JSON.stringify(record));
+    } catch (err) {
+      console.warn("⚠️ No se pudo cachear sunlight.json", err);
+    }
+  }
+
+  async function loadSunlightPayload() {
+    const cached = getCachedSunlight();
+    if (cached) return cached.payload;
+    try {
+      const res = await fetch(SUNLIGHT_DATA_URL, { cache: "no-store" });
+      if (!res.ok) throw new Error(`sunlight.json responded ${res.status}`);
+      const payload = await res.json();
+      cacheSunlightPayload(payload);
+      return payload;
+    } catch (networkErr) {
+      const stale = getCachedSunlight({ allowExpired: true });
+      if (stale) {
+        console.warn(
+          "⚠️ Usando sunlight.json cacheado (expirado) por error de red",
+          networkErr
+        );
+        return stale.payload;
       }
+      throw networkErr;
+    }
+  }
 
-
-
-      // Vacía un contenedor de forma performante
-      function clearContainer(container) {
-        while (container.firstChild) {
-          container.removeChild(container.firstChild);
-        }
+  async function checkSunBarcelona() {
+    try {
+      const payload = await loadSunlightPayload();
+      const { isoDate, seconds: nowSeconds } = getMadridNow();
+      const info = payload?.days?.[isoDate];
+      if (!info || !info.sunriseUtc || !info.sunsetUtc) {
+        throw new Error(`Missing sunlight data for ${isoDate}`);
       }
+      const sunriseSeconds = getMadridSecondsFromUtc(info.sunriseUtc);
+      const sunsetSeconds = getMadridSecondsFromUtc(info.sunsetUtc);
+      const isDaylight =
+        nowSeconds >= sunriseSeconds && nowSeconds < sunsetSeconds;
+      applyTheme(isDaylight ? "light" : "dark");
+    } catch (err) {
+      console.warn("⚠️ No se pudo leer sunlight.json, usando hora local", err);
+      const hour = new Date().getHours();
+      const fallbackTheme = hour >= 7 && hour < 19 ? "light" : "dark";
+      applyTheme(fallbackTheme);
+    }
+  }
 
-      // —————————————————————————
-      // 2) GESTIÓN DE TEMA
-      // —————————————————————————
+  document.addEventListener("DOMContentLoaded", () => {
+    checkSunBarcelona();
+  });
 
-      const themeBtn = qs('#toggleTheme');
-      const root = document.documentElement;
+  // —————————————————————————
+  // 3) GESTIÓN DE NUBES
+  // —————————————————————————
 
-      // Orden nuevo: de claro a oscuro
-      const themes = ['light', 'dark'];
-      const emojis = {
-        light: '⚪️',
-        dark: '⚫️'
-      };
+  const bgContainer = qs("#backgroundContainer");
 
-      let currentThemeIndex = Math.max(0, themes.indexOf(root.getAttribute('data-theme')));
+  // Parámetros por defecto (podrías leer estos valores de CSS custom props si prefieres)
+  let cloudParams = getRandomCloudParams();
 
-      function applyTheme(theme) {
-        root.setAttribute('data-theme', theme);
-        themeBtn.textContent = emojis[theme] || '🎛️';
-        currentThemeIndex = themes.indexOf(theme);
-      }
+  // Genera un único div.cloud con estilos aleatorios
+  function createCloud(params) {
+    const cloud = document.createElement("div");
+    cloud.className = "cloud";
 
-      themeBtn.addEventListener('click', () => {
-        currentThemeIndex = (currentThemeIndex + 1) % themes.length;
-        const nextTheme = themes[currentThemeIndex];
-        applyTheme(nextTheme);
-      });
+    const w = randomBetween(params.minWidth, params.maxWidth);
+    cloud.style.width = `${w}px`;
+    cloud.style.height = `${w * randomBetween(0.6, 0.8)}px`;
+    cloud.style.top = `${randomBetween(-10, 110)}%`;
+    cloud.style.left = `${randomBetween(-10, 110)}%`;
+    // Opacidad fija (100%)
+    cloud.style.opacity = "1";
 
-      const CITY_TIMEZONE = 'Europe/Madrid';
-      const SUNLIGHT_DATA_URL = 'data/sunlight.json';
-      const SUNLIGHT_CACHE_KEY = 'sunlight:data';
-      const SUNLIGHT_CACHE_TTL_MS = 4 * 60 * 60 * 1000; // 4h
-      const madridFormatter = new Intl.DateTimeFormat('en-CA', {
-        timeZone: CITY_TIMEZONE,
-        hour12: false,
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      });
+    cloud.style.animationDuration = `${randomBetween(
+      ...params.durationRange
+    )}s`;
+    cloud.style.animationDelay = `${randomBetween(0, 5)}s`;
+    // randomBetween(1, 5) devuelve [1,5), con floor => 1..4 (incluye float4)
+    cloud.style.animationName = `float${Math.floor(randomBetween(1, 5))}`;
 
-      function partsToObj(parts) {
-        return parts.reduce((acc, part) => {
-          if (part.type !== 'literal') acc[part.type] = part.value;
-          return acc;
-        }, {});
-      }
+    return cloud;
+  }
 
-      function getMadridNow() {
-        const parts = partsToObj(madridFormatter.formatToParts(new Date()));
-        const isoDate = `${parts.year}-${parts.month}-${parts.day}`;
-        const seconds = (Number(parts.hour) * 3600) + (Number(parts.minute) * 60) + Number(parts.second);
-        return { isoDate, seconds };
-      }
+  // Genera todas las nubes usando un DocumentFragment
+  function generateClouds(params) {
+    clearContainer(bgContainer);
 
-      function getMadridSecondsFromUtc(utcString) {
-        const parts = partsToObj(madridFormatter.formatToParts(new Date(utcString)));
-        return (Number(parts.hour) * 3600) + (Number(parts.minute) * 60) + Number(parts.second);
-      }
+    const frag = document.createDocumentFragment();
+    for (let i = 0; i < params.count; i++) {
+      frag.appendChild(createCloud(params));
+    }
+    bgContainer.appendChild(frag);
+  }
 
-      function getCachedSunlight({ allowExpired = false } = {}) {
-        try {
-          const raw = localStorage.getItem(SUNLIGHT_CACHE_KEY);
-          if (!raw) return null;
-          const parsed = JSON.parse(raw);
-          if (!parsed || typeof parsed.timestamp !== 'number' || !parsed.payload) return null;
-          if (!allowExpired && (Date.now() - parsed.timestamp > SUNLIGHT_CACHE_TTL_MS)) return null;
-          return parsed;
-        } catch (err) {
-          console.warn('⚠️ Cache de sunlight.json corrupta, se ignora', err);
-          return null;
-        }
-      }
+  // Inicializa
+  generateClouds(cloudParams);
 
-      function cacheSunlightPayload(payload) {
-        try {
-          const record = { timestamp: Date.now(), payload };
-          localStorage.setItem(SUNLIGHT_CACHE_KEY, JSON.stringify(record));
-        } catch (err) {
-          console.warn('⚠️ No se pudo cachear sunlight.json', err);
-        }
-      }
+  // Randomizar parámetros
+  qs("#randomizeClouds").addEventListener("click", () => {
+    cloudParams = getRandomCloudParams();
+    generateClouds(cloudParams);
+  });
+})();
 
-      async function loadSunlightPayload() {
-        const cached = getCachedSunlight();
-        if (cached) return cached.payload;
-        try {
-          const res = await fetch(SUNLIGHT_DATA_URL, { cache: 'no-store' });
-          if (!res.ok) throw new Error(`sunlight.json responded ${res.status}`);
-          const payload = await res.json();
-          cacheSunlightPayload(payload);
-          return payload;
-        } catch (networkErr) {
-          const stale = getCachedSunlight({ allowExpired: true });
-          if (stale) {
-            console.warn('⚠️ Usando sunlight.json cacheado (expirado) por error de red', networkErr);
-            return stale.payload;
-          }
-          throw networkErr;
-        }
-      }
-
-      async function checkSunBarcelona() {
-        try {
-          const payload = await loadSunlightPayload();
-          const { isoDate, seconds: nowSeconds } = getMadridNow();
-          const info = payload?.days?.[isoDate];
-          if (!info || !info.sunriseUtc || !info.sunsetUtc) {
-            throw new Error(`Missing sunlight data for ${isoDate}`);
-          }
-          const sunriseSeconds = getMadridSecondsFromUtc(info.sunriseUtc);
-          const sunsetSeconds = getMadridSecondsFromUtc(info.sunsetUtc);
-          const isDaylight = nowSeconds >= sunriseSeconds && nowSeconds < sunsetSeconds;
-          applyTheme(isDaylight ? 'light' : 'dark');
-        } catch (err) {
-          console.warn('⚠️ No se pudo leer sunlight.json, usando hora local', err);
-          const hour = new Date().getHours();
-          const fallbackTheme = hour >= 7 && hour < 19 ? 'light' : 'dark';
-          applyTheme(fallbackTheme);
-        }
-      }
-
-      document.addEventListener('DOMContentLoaded', () => {
-        checkSunBarcelona();
-      });
-
-      // —————————————————————————
-      // 3) GESTIÓN DE NUBES
-      // —————————————————————————
-
-      const bgContainer = qs('#backgroundContainer');
-
-      // Parámetros por defecto (podrías leer estos valores de CSS custom props si prefieres)
-      let cloudParams = getRandomCloudParams();
-
-      // Genera un único div.cloud con estilos aleatorios
-      function createCloud(params) {
-        const cloud = document.createElement('div');
-        cloud.className = 'cloud';
-
-        const w = randomBetween(params.minWidth, params.maxWidth);
-        cloud.style.width = `${w}px`;
-        cloud.style.height = `${w * randomBetween(0.6, 0.8)}px`;
-        cloud.style.top = `${randomBetween(-10, 110)}%`;
-        cloud.style.left = `${randomBetween(-10, 110)}%`;
-        // Opacidad fija (100%)
-        cloud.style.opacity = '1';
-
-        cloud.style.animationDuration = `${randomBetween(...params.durationRange)}s`;
-        cloud.style.animationDelay = `${randomBetween(0, 5)}s`;
-        // randomBetween(1, 5) devuelve [1,5), con floor => 1..4 (incluye float4)
-        cloud.style.animationName = `float${Math.floor(randomBetween(1, 5))}`;
-
-        return cloud;
-      }
-
-      // Genera todas las nubes usando un DocumentFragment
-      function generateClouds(params) {
-        clearContainer(bgContainer);
-
-        const frag = document.createDocumentFragment();
-        for (let i = 0; i < params.count; i++) {
-          frag.appendChild(createCloud(params));
-        }
-        bgContainer.appendChild(frag);
-      }
-
-      // Inicializa
-      generateClouds(cloudParams);
-
-      // Randomizar parámetros
-      qs('#randomizeClouds').addEventListener('click', () => {
-        cloudParams = getRandomCloudParams();
-        generateClouds(cloudParams);
-      });
-
-    })();
-
-    /* ==========================
+/* ==========================
        BLOQUE MULTILENGUAJE
        ========================== */
 
-    const websRealizadas = [
-      {
-        nombre: "andrea carilla",
-        carpeta: "andreacarilla",
-        link: "https://meowrhino.github.io/andreacarilla/",
-        movilPos: "left",
-        imgQuantity: 5,
-        textoES: "portfolio online y archivo de la fotógrafa <a target='_blank' href='https://meowrhino.github.io/andreacarilla/'>andrea carilla</a>. La página principal se divide en una galería y una nube de links con opciones de filtrado por categorías.",
-        textoEN: "online portfolio and archive of photographer <a target='_blank' href='https://meowrhino.github.io/andreacarilla/'>andrea carilla</a>. The homepage combines a gallery with a link cloud and category filters.",
-        textoFR: "portfolio en ligne et archive de la photographe <a target='_blank' href='https://meowrhino.github.io/andreacarilla/'>andrea carilla</a>. La page d’accueil mêle une galerie et un nuage de liens avec des filtres par catégorie.",
-        textoCAT: "portfolio en línia i arxiu de la fotògrafa <a target='_blank' href='https://meowrhino.github.io/andreacarilla/'>andrea carilla</a>. La portada combina una galeria i un núvol d’enllaços amb filtres per categories."
-      },
+const websRealizadas = [
+  {
+    nombre: "andrea carilla",
+    carpeta: "andreacarilla",
+    link: "andreacarilla.work",
+    movilPos: "left",
+    imgQuantity: 5,
+    textoES:
+      "portfolio online y archivo de la fotógrafa <a target='_blank' href='https://meowrhino.github.io/andreacarilla/'>andrea carilla</a>. La página principal se divide en una galería y una nube de links con opciones de filtrado por categorías.",
+    textoEN:
+      "online portfolio and archive of photographer <a target='_blank' href='https://meowrhino.github.io/andreacarilla/'>andrea carilla</a>. The homepage combines a gallery with a link cloud and category filters.",
+    textoFR:
+      "portfolio en ligne et archive de la photographe <a target='_blank' href='https://meowrhino.github.io/andreacarilla/'>andrea carilla</a>. La page d’accueil mêle une galerie et un nuage de liens avec des filtres par catégorie.",
+    textoCAT:
+      "portfolio en línia i arxiu de la fotògrafa <a target='_blank' href='https://meowrhino.github.io/andreacarilla/'>andrea carilla</a>. La portada combina una galeria i un núvol d’enllaços amb filtres per categories.",
+  },
 
-      {
-        nombre: "berta esteve",
-        carpeta: "bertaesteve",
-        link: "https://meowrhino.github.io/snerta/",
-        movilPos: "left",
-        imgQuantity: 6,
-        textoES: "archivo profesional de la curadora <a target='_blank' href='https://meowrhino.github.io/snerta/'>berta esteve</a> que se divide en una home scrolleable y un archivo de proyectos que puede actualizar ella misma.",
-        textoEN: "professional archive of curator <a target='_blank' href='https://meowrhino.github.io/snerta/'>berta esteve</a>, featuring a scrollable home and a project archive she can update herself.",
-        textoFR: "archives professionnelles de la curatrice <a target='_blank' href='https://meowrhino.github.io/snerta/'>berta esteve</a>, avec une page d’accueil défilante et un archive de projets qu’elle peut mettre à jour.",
-        textoCAT: "arxiu professional de la curadora <a target='_blank' href='https://meowrhino.github.io/snerta/'>berta esteve</a>, amb una home desplaçable i un arxiu de projectes que pot actualitzar ella mateixa."
-      },
+  {
+    nombre: "miranda perez-hita",
+    carpeta: "mph",
+    link: "https://mirandaperezhita.com/",
+    movilPos: "left",
+    imgQuantity: 5,
+    textoES:
+      "portfolio de diseño gráfico de <a target='_blank' href='https://meowrhino.github.io/andreacarilla/'>miranda</a>. Se compone de un scroll y menú de navegación responsive con idiomas y colores según proyecto.",
+    textoEN:
+      "",
+    textoFR:
+      "",
+    textoCAT:
+      "",
+  },
 
-      {
-        nombre: "christine",
-        carpeta: "christine",
-        link: "https://meowrhino.github.io/christine/",
-        movilPos: "left",
-        imgQuantity: 4,
-        textoES: "web brújula para explorar el universo de <a target='_blank' href='https://meowrhino.github.io/christine/'>christine</a>. Los proyectos se disponen en coordenadas en 4 ejes y se eligen 2 para poblar el gráfico.",
-        textoEN: "compass-like website to explore <a target='_blank' href='https://meowrhino.github.io/christine/'>christine</a>’s universe. Projects live on four axes; two are chosen to populate the chart.",
-        textoFR: "site-boussole pour explorer l’univers de <a target='_blank' href='https://meowrhino.github.io/christine/'>christine</a>. Les projets se placent sur 4 axes et deux alimentent le graphique.",
-        textoCAT: "web brúixola per explorar l’univers de <a target='_blank' href='https://meowrhino.github.io/christine/'>christine</a>. Els projectes es distribueixen en 4 eixos i se’n trien 2 per poblar el gràfic."
-      },
+  {
+    nombre: "christine",
+    carpeta: "christine",
+    link: "https://meowrhino.github.io/christine/",
+    movilPos: "left",
+    imgQuantity: 4,
+    textoES:
+      "web brújula para explorar el universo de <a target='_blank' href='https://meowrhino.github.io/christine/'>christine</a>. Los proyectos se disponen en coordenadas en 4 ejes y se eligen 2 para poblar el gráfico.",
+    textoEN:
+      "compass-like website to explore <a target='_blank' href='https://meowrhino.github.io/christine/'>christine</a>’s universe. Projects live on four axes; two are chosen to populate the chart.",
+    textoFR:
+      "site-boussole pour explorer l’univers de <a target='_blank' href='https://meowrhino.github.io/christine/'>christine</a>. Les projets se placent sur 4 axes et deux alimentent le graphique.",
+    textoCAT:
+      "web brúixola per explorar l’univers de <a target='_blank' href='https://meowrhino.github.io/christine/'>christine</a>. Els projectes es distribueixen en 4 eixos i se’n trien 2 per poblar el gràfic.",
+  },
 
-      {
-        nombre: "mikesx",
-        carpeta: "mikesx",
-        link: "https://meowrhino.github.io/mikesx/",
-        movilPos: "left",
-        imgQuantity: 5,
-        textoES: "portfolio temático del diseñador gráfico <a target='_blank' href='https://meowrhino.github.io/mikesx/'>mikesx</a>. La home simula una stack de CD's que se repite infinitamente, cada uno contiene una galería con sus imágenes",
-        textoEN: "thematic portfolio of graphic designer <a target='_blank' href='https://meowrhino.github.io/mikesx/'>mikesx</a>. The homepage simulates an infinite stack of CDs, each containing a gallery with his images.",
-        textoFR: "portfolio thématique du graphiste <a target='_blank' href='https://meowrhino.github.io/mikesx/'>mikesx</a>. La page d’accueil simule une pile infinie de CD, chacun contenant une galerie avec ses images.",
-        textoCAT: "portfolio temàtic del dissenyador gràfic <a target='_blank' href='https://meowrhino.github.io/mikesx/'>mikesx</a>. La portada simula una pila infinita de CD's, cadascun amb una galeria amb les seves imatges."
-      },
+  {
+    nombre: "mikesx",
+    carpeta: "mikesx",
+    link: "https://meowrhino.github.io/mikesx/",
+    movilPos: "left",
+    imgQuantity: 5,
+    textoES:
+      "portfolio temático del diseñador gráfico <a target='_blank' href='https://meowrhino.github.io/mikesx/'>mikesx</a>. La home simula una stack de CD's que se repite infinitamente, cada uno contiene una galería con sus imágenes",
+    textoEN:
+      "thematic portfolio of graphic designer <a target='_blank' href='https://meowrhino.github.io/mikesx/'>mikesx</a>. The homepage simulates an infinite stack of CDs, each containing a gallery with his images.",
+    textoFR:
+      "portfolio thématique du graphiste <a target='_blank' href='https://meowrhino.github.io/mikesx/'>mikesx</a>. La page d’accueil simule une pile infinie de CD, chacun contenant une galerie avec ses images.",
+    textoCAT:
+      "portfolio temàtic del dissenyador gràfic <a target='_blank' href='https://meowrhino.github.io/mikesx/'>mikesx</a>. La portada simula una pila infinita de CD's, cadascun amb una galeria amb les seves imatges.",
+  },
 
-      {
-        nombre: "estructuras3000",
-        carpeta: "e3000",
-        link: "https://meowrhino.github.io/e300/",
-        movilPos: "left",
-        imgQuantity: 7,
-        textoES: "web oficial del colectivo <a target='_blank' href='https://meowrhino.github.io/e300/'>estructuras3000</a>.",
-        textoEN: "official website of the collective <a target='_blank' href='https://meowrhino.github.io/e300/'>estructuras3000</a>.",
-        textoFR: "site officiel du collectif <a target='_blank' href='https://meowrhino.github.io/e300/'>estructuras3000</a>.",
-        textoCAT: "web oficial del col·lectiu <a target='_blank' href='https://meowrhino.github.io/e300/'>estructuras3000</a>."
-      },
+  {
+    nombre: "estructuras3000",
+    carpeta: "e3000",
+    link: "https://meowrhino.github.io/e300/",
+    movilPos: "left",
+    imgQuantity: 7,
+    textoES:
+      "web oficial del colectivo <a target='_blank' href='https://meowrhino.github.io/e300/'>estructuras3000</a>.",
+    textoEN:
+      "official website of the collective <a target='_blank' href='https://meowrhino.github.io/e300/'>estructuras3000</a>.",
+    textoFR:
+      "site officiel du collectif <a target='_blank' href='https://meowrhino.github.io/e300/'>estructuras3000</a>.",
+    textoCAT:
+      "web oficial del col·lectiu <a target='_blank' href='https://meowrhino.github.io/e300/'>estructuras3000</a>.",
+  },
 
-      {
-        nombre: "hifas studio",
-        carpeta: "hifasstudio",
-        link: "https://meowrhino.github.io/anakatana/",
-        movilPos: "left",
-        imgQuantity: 7,
-        textoES: "ecommerce funcional para la tienda <a target='_blank' href='https://meowrhino.github.io/anakatana/'>hifas studio</a> con panel de administración, registro de transacciones y cobros vía Stripe.",
-        textoEN: "functional ecommerce for <a target='_blank' href='https://meowrhino.github.io/anakatana/'>hifas studio</a> with admin panel, transaction logging and Stripe payments.",
-        textoFR: "e-commerce fonctionnel pour <a target='_blank' href='https://meowrhino.github.io/anakatana/'>hifas studio</a> avec panneau d’admin, journal des transactions et paiements Stripe.",
-        textoCAT: "ecommerce funcional per a <a target='_blank' href='https://meowrhino.github.io/anakatana/'>hifas studio</a> amb panell d’administració, registre de transaccions i pagaments amb Stripe."
-      },
+  {
+    nombre: "hifas studio",
+    carpeta: "hifasstudio",
+    link: "https://meowrhino.github.io/anakatana/",
+    movilPos: "left",
+    imgQuantity: 7,
+    textoES:
+      "ecommerce funcional para la tienda <a target='_blank' href='https://meowrhino.github.io/anakatana/'>hifas studio</a> con panel de administración, registro de transacciones y cobros vía Stripe.",
+    textoEN:
+      "functional ecommerce for <a target='_blank' href='https://meowrhino.github.io/anakatana/'>hifas studio</a> with admin panel, transaction logging and Stripe payments.",
+    textoFR:
+      "e-commerce fonctionnel pour <a target='_blank' href='https://meowrhino.github.io/anakatana/'>hifas studio</a> avec panneau d’admin, journal des transactions et paiements Stripe.",
+    textoCAT:
+      "ecommerce funcional per a <a target='_blank' href='https://meowrhino.github.io/anakatana/'>hifas studio</a> amb panell d’administració, registre de transaccions i pagaments amb Stripe.",
+  },
 
-      {
-        nombre: "jaumeclotet",
-        carpeta: "jaumeclotet",
-        link: "https://meowrhino.github.io/jaumeclotet/",
-        movilPos: "left",
-        imgQuantity: 4,
-        textoES: "página oficial del artista <a target='_blank' href='https://meowrhino.github.io/jaumeclotet/'>jaumeclotet</a> donde se destacan 6 proyectos de su archivo y una sorpresa cuando has visto todos.",
-        textoEN: "official page of artist <a target='_blank' href='https://meowrhino.github.io/jaumeclotet/'>jaumeclotet</a>, highlighting 6 archive projects and a surprise once you’ve seen them all.",
-        textoFR: "page officielle de l’artiste <a target='_blank' href='https://meowrhino.github.io/jaumeclotet/'>jaumeclotet</a> avec 6 projets mis en avant et une surprise quand tu les as tous vus.",
-        textoCAT: "pàgina oficial de l’artista <a target='_blank' href='https://meowrhino.github.io/jaumeclotet/'>jaumeclotet</a> amb 6 projectes destacats i una sorpresa quan els hagis vist tots."
-      },
+  {
+    nombre: "berta esteve",
+    carpeta: "bertaesteve",
+    link: "https://meowrhino.github.io/snerta/",
+    movilPos: "left",
+    imgQuantity: 6,
+    textoES:
+      "archivo profesional de la curadora <a target='_blank' href='https://meowrhino.github.io/snerta/'>berta esteve</a> que se divide en una home scrolleable y un archivo de proyectos que puede actualizar ella misma.",
+    textoEN:
+      "professional archive of curator <a target='_blank' href='https://meowrhino.github.io/snerta/'>berta esteve</a>, featuring a scrollable home and a project archive she can update herself.",
+    textoFR:
+      "archives professionnelles de la curatrice <a target='_blank' href='https://meowrhino.github.io/snerta/'>berta esteve</a>, avec une page d’accueil défilante et un archive de projets qu’elle peut mettre à jour.",
+    textoCAT:
+      "arxiu professional de la curadora <a target='_blank' href='https://meowrhino.github.io/snerta/'>berta esteve</a>, amb una home desplaçable i un arxiu de projectes que pot actualitzar ella mateixa.",
+  },
 
-      {
-        nombre: "erikamichi",
-        carpeta: "rikamichie",
-        link: "https://meowrhino.github.io/rikamichie/",
-        movilPos: "left",
-        imgQuantity: 7,
-        textoES: "sitio web de <a target='_blank' href='https://meowrhino.github.io/rikamichie/'>rikamichie</a> donde se combinan todas sus disciplinas en una cruz navegable dividida en 6 pantallas.",
-        textoEN: "website of <a target='_blank' href='https://meowrhino.github.io/rikamichie/'>rikamichie</a> combining all her disciplines in a navigable cross split into 6 screens.",
-        textoFR: "site de <a target='_blank' href='https://meowrhino.github.io/rikamichie/'>rikamichie</a> combinant toutes ses disciplines dans une croix navigable en 6 écrans.",
-        textoCAT: "lloc web de <a target='_blank' href='https://meowrhino.github.io/rikamichie/'>rikamichie</a> on es combinen totes les seves disciplines en una creu navegable dividida en 6 pantalles."
-      },
+  {
+    nombre: "jaumeclotet",
+    carpeta: "jaumeclotet",
+    link: "https://meowrhino.github.io/jaumeclotet/",
+    movilPos: "left",
+    imgQuantity: 4,
+    textoES:
+      "página oficial del artista <a target='_blank' href='https://meowrhino.github.io/jaumeclotet/'>jaumeclotet</a> donde se destacan 6 proyectos de su archivo y una sorpresa cuando has visto todos.",
+    textoEN:
+      "official page of artist <a target='_blank' href='https://meowrhino.github.io/jaumeclotet/'>jaumeclotet</a>, highlighting 6 archive projects and a surprise once you’ve seen them all.",
+    textoFR:
+      "page officielle de l’artiste <a target='_blank' href='https://meowrhino.github.io/jaumeclotet/'>jaumeclotet</a> avec 6 projets mis en avant et une surprise quand tu les as tous vus.",
+    textoCAT:
+      "pàgina oficial de l’artista <a target='_blank' href='https://meowrhino.github.io/jaumeclotet/'>jaumeclotet</a> amb 6 projectes destacats i una sorpresa quan els hagis vist tots.",
+  },
 
-      {
-        nombre: "villagranota",
-        carpeta: "villagranota",
-        link: "https://meowrhino.github.io/villagranota/",
-        movilPos: "left",
-        imgQuantity: 6,
-        textoES: "statement online del colectivo <a target='_blank' href='https://meowrhino.github.io/villagranota/'>villagranota</a> por el código libre, divertido y honesto. Un pequeño estanque digital.",
-        textoEN: "online statement of the collective <a target='_blank' href='https://meowrhino.github.io/villagranota/'>villagranota</a> for free, fun and honest code. A small digital pond.",
-        textoFR: "déclaration en ligne du collectif <a target='_blank' href='https://meowrhino.github.io/villagranota/'>villagranota</a> pour un code libre, ludique et honnête. Un petit étang numérique.",
-        textoCAT: "manifest en línia del col·lectiu <a target='_blank' href='https://meowrhino.github.io/villagranota/'>villagranota</a> pel codi lliure, divertit i honest. Un petit estany digital."
-      },
+  {
+    nombre: "erikamichi",
+    carpeta: "rikamichie",
+    link: "https://meowrhino.github.io/rikamichie/",
+    movilPos: "left",
+    imgQuantity: 7,
+    textoES:
+      "sitio web de <a target='_blank' href='https://meowrhino.github.io/rikamichie/'>rikamichie</a> donde se combinan todas sus disciplinas en una cruz navegable dividida en 6 pantallas.",
+    textoEN:
+      "website of <a target='_blank' href='https://meowrhino.github.io/rikamichie/'>rikamichie</a> combining all her disciplines in a navigable cross split into 6 screens.",
+    textoFR:
+      "site de <a target='_blank' href='https://meowrhino.github.io/rikamichie/'>rikamichie</a> combinant toutes ses disciplines dans une croix navigable en 6 écrans.",
+    textoCAT:
+      "lloc web de <a target='_blank' href='https://meowrhino.github.io/rikamichie/'>rikamichie</a> on es combinen totes les seves disciplines en una creu navegable dividida en 6 pantalles.",
+  },
 
-      {
-        nombre: "elmundodelasjordis.com",
-        carpeta: "jordis",
-        link: "https://elmundodelasjordis.com/",
-        movilPos: "left",
-        imgQuantity: 5,
-        textoES: "página oficial de <a target='_blank' href='https://elmundodelasjordis.com/'>las jordis</a>. Contiene 4 secciones con editores de texto integrados para que podamos seguir 'keeping up' con sus aventuras.",
-        textoEN: "official page of <a target='_blank' href='https://elmundodelasjordis.com/'>las jordis</a>. It contains four sections with integrated text editors so we can keep up with their adventures.",
-        textoFR: "page officielle de <a target='_blank' href='https://elmundodelasjordis.com/'>las jordis</a>. Elle comporte quatre sections avec des éditeurs de texte intégrés pour que nous puissions suivre leurs aventures.",
-        textoCAT: "pàgina oficial de <a target='_blank' href='https://elmundodelasjordis.com/'>les jordis</a>. Conté quatre seccions amb editors de text integrats perquè puguem seguir les seves aventures."
-      },
+  {
+    nombre: "villagranota",
+    carpeta: "villagranota",
+    link: "https://meowrhino.github.io/villagranota/",
+    movilPos: "left",
+    imgQuantity: 6,
+    textoES:
+      "statement online del colectivo <a target='_blank' href='https://meowrhino.github.io/villagranota/'>villagranota</a> por el código libre, divertido y honesto. Un pequeño estanque digital.",
+    textoEN:
+      "online statement of the collective <a target='_blank' href='https://meowrhino.github.io/villagranota/'>villagranota</a> for free, fun and honest code. A small digital pond.",
+    textoFR:
+      "déclaration en ligne du collectif <a target='_blank' href='https://meowrhino.github.io/villagranota/'>villagranota</a> pour un code libre, ludique et honnête. Un petit étang numérique.",
+    textoCAT:
+      "manifest en línia del col·lectiu <a target='_blank' href='https://meowrhino.github.io/villagranota/'>villagranota</a> pel codi lliure, divertit i honest. Un petit estany digital.",
+  },
 
-      {
-        nombre: "miranda perez-hita",
-        carpeta: "mph",
-        link: "https://mirandaperezhita.com/",
-        movilPos: "left",
-        imgQuantity: 5,
-        textoES: "portfolio de diseño gráfico de <a target='_blank' href='https://mirandaperezhita.com/'>miranda</a>. Se compone de un scroll y un menú de navegación responsive con idiomas y colores según proyecto.",
-        textoEN: "graphic design portfolio of <a target='_blank' href='https://mirandaperezhita.com/'>miranda</a>. It features a single scroll and a responsive navigation menu with languages and colors per project.",
-        textoFR: "portfolio de design graphique de <a target='_blank' href='https://mirandaperezhita.com/'>miranda</a>. Une page à défilement unique et un menu de navigation responsive avec langues et couleurs propres à chaque projet.",
-        textoCAT: "portfolio de disseny gràfic de <a target='_blank' href='https://mirandaperezhita.com/'>miranda</a>. Consta d’un scroll i un menú de navegació responsive amb idiomes i colors segons projecte."
-      }
-    ];
+  {
+    nombre: "elmundodelasjordis.com",
+    carpeta: "jordis",
+    link: "https://elmundodelasjordis.com/",
+    movilPos: "left",
+    imgQuantity: 5,
+    textoES:
+      "página oficial de <a target='_blank' href='https://elmundodelasjordis.com/'>las jordis</a>. Contiene 4 secciones con editores de texto integrados para que podamos seguir 'keeping up' con sus aventuras.",
+    textoEN:
+      "official page of <a target='_blank' href='https://elmundodelasjordis.com/'>las jordis</a>. It contains four sections with integrated text editors so we can keep up with their adventures.",
+    textoFR:
+      "page officielle de <a target='_blank' href='https://elmundodelasjordis.com/'>las jordis</a>. Elle comporte quatre sections avec des éditeurs de texte intégrés pour que nous puissions suivre leurs aventures.",
+    textoCAT:
+      "pàgina oficial de <a target='_blank' href='https://elmundodelasjordis.com/'>les jordis</a>. Conté quatre seccions amb editors de text integrats perquè puguem seguir les seves aventures.",
+  },
+];
 
-    const LANGS = ['ES', 'EN', 'FR', 'CAT'];
+const LANGS = ["ES", "EN", "FR", "CAT"];
 
-    const textosMain = {
-      ES: {
-        mainTitle: 'beca de digitalización <br> meowrhino',
-        whyTitle: 'por qué una web propia?',
-        whyP1: 'porque no quieres vivir de alquiler dentro de las plataformas; porque crees en el código abierto; porque quieres apoyar la propuesta de una amiga; para recuperar la propiedad de tu identidad en línea; para jugar y explorar espacios nuevos; para escapar de cuadrículas, vigilancia y censura; para no quedarte sin cuenta de un día para otro; para dejar de pagar suscripciones que no te hacen falta; porque piensas demasiado en la tecnocracia/tecnofeudalismo…',
-        whyP2: 'internet nació como bien común y la queremos descentralizada, local, compartida y —sobre todo— divertida.'
-      },
-      EN: {
-        mainTitle: 'digitization grant <br> meowrhino',
-        whyTitle: 'why a website of your own?',
-        whyP1: 'because you don’t want to live “renting” inside platforms; because you believe in open‑source; because you want to support a friend’s proposal; to reclaim ownership of your online identity; to play and explore new spaces; to escape grids, surveillance and censorship; to not lose your account overnight; to stop paying subscriptions you don’t need; because you think too much about technocracy/techno‑feudalism…',
-        whyP2: 'the internet was born as a commons, and we want it decentralized, local, shared and—above all—fun.'
-      },
-      FR: {
-        mainTitle: 'bourse de numérisation <br> meowrhino',
-        whyTitle: 'pourquoi un site à toi ?',
-        whyP1: 'parce que tu ne veux plus vivre en location dans les plateformes ; parce que tu crois au logiciel libre ; parce que tu veux soutenir la proposition d’une amie ; pour reprendre la propriété de ton identité en ligne ; pour jouer et explorer de nouveaux espaces ; pour échapper aux grilles, à la surveillance et à la censure ; pour ne pas te retrouver sans compte du jour au lendemain ; pour arrêter de payer des abonnements inutiles ; parce que tu penses trop à la technocratie/techno‑féodalisme…',
-        whyP2: 'internet est né comme un bien commun et nous le voulons décentralisé, local, partagé et —surtout— ludique.'
-      },
-      CAT: {
-        mainTitle: 'beca de digitalització <br> meowrhino',
-        whyTitle: 'per què una web pròpia?',
-        whyP1: 'perquè vols deixar de viure de lloguer dins les plataformes; perquè creus en el codi obert; perquè vols donar suport a la proposta d’una amiga; per recuperar la propietat de la teva identitat en línia; per jugar i explorar espais nous; per escapar de graelles, vigilància i censura; per no quedar-te sense compte d’un dia per l’altre; per deixar de pagar subscripcions que no et calen; perquè pensas massa en la tecnocracia/tecnofeudalisme”...',
-        whyP2: 'internet va néixer com un bé comú i la volem descentralitzada, local, compartida i —sobretot— divertida.'
-      }
+const textosMain = {
+  ES: {
+    mainTitle: "beca de digitalización <br> meowrhino",
+    whyTitle: "por qué una web propia?",
+    whyP1:
+      "porque no quieres vivir de alquiler dentro de las plataformas; porque crees en el código abierto; porque quieres apoyar la propuesta de una amiga; para recuperar la propiedad de tu identidad en línea; para jugar y explorar espacios nuevos; para escapar de cuadrículas, vigilancia y censura; para no quedarte sin cuenta de un día para otro; para dejar de pagar suscripciones que no te hacen falta; porque piensas demasiado en la tecnocracia/tecnofeudalismo…",
+    whyP2:
+      "internet nació como bien común y la queremos descentralizada, local, compartida y —sobre todo— divertida.",
+  },
+  EN: {
+    mainTitle: "digitization grant <br> meowrhino",
+    whyTitle: "why a website of your own?",
+    whyP1:
+      "because you don’t want to live “renting” inside platforms; because you believe in open‑source; because you want to support a friend’s proposal; to reclaim ownership of your online identity; to play and explore new spaces; to escape grids, surveillance and censorship; to not lose your account overnight; to stop paying subscriptions you don’t need; because you think too much about technocracy/techno‑feudalism…",
+    whyP2:
+      "the internet was born as a commons, and we want it decentralized, local, shared and—above all—fun.",
+  },
+  FR: {
+    mainTitle: "bourse de numérisation <br> meowrhino",
+    whyTitle: "pourquoi un site à toi ?",
+    whyP1:
+      "parce que tu ne veux plus vivre en location dans les plateformes ; parce que tu crois au logiciel libre ; parce que tu veux soutenir la proposition d’une amie ; pour reprendre la propriété de ton identité en ligne ; pour jouer et explorer de nouveaux espaces ; pour échapper aux grilles, à la surveillance et à la censure ; pour ne pas te retrouver sans compte du jour au lendemain ; pour arrêter de payer des abonnements inutiles ; parce que tu penses trop à la technocratie/techno‑féodalisme…",
+    whyP2:
+      "internet est né comme un bien commun et nous le voulons décentralisé, local, partagé et —surtout— ludique.",
+  },
+  CAT: {
+    mainTitle: "beca de digitalització <br> meowrhino",
+    whyTitle: "per què una web pròpia?",
+    whyP1:
+      "perquè vols deixar de viure de lloguer dins les plataformes; perquè creus en el codi obert; perquè vols donar suport a la proposta d’una amiga; per recuperar la propietat de la teva identitat en línia; per jugar i explorar espais nous; per escapar de graelles, vigilància i censura; per no quedar-te sense compte d’un dia per l’altre; per deixar de pagar subscripcions que no et calen; perquè pensas massa en la tecnocracia/tecnofeudalisme”...",
+    whyP2:
+      "internet va néixer com un bé comú i la volem descentralitzada, local, compartida i —sobretot— divertida.",
+  },
+};
+
+function appendSafeRichText(target, html = "") {
+  if (!html) return;
+  const temp = document.createElement("div");
+  temp.innerHTML = html;
+  Array.from(temp.childNodes).forEach((node) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      target.appendChild(document.createTextNode(node.textContent));
+      return;
+    }
+    if (node.nodeType === Node.ELEMENT_NODE && node.tagName === "A") {
+      const safeLink = document.createElement("a");
+      const href = node.getAttribute("href");
+      if (href) safeLink.href = href;
+      const targetAttr = node.getAttribute("target");
+      if (targetAttr) safeLink.target = targetAttr;
+      safeLink.rel = node.getAttribute("rel") || "noopener noreferrer";
+      safeLink.textContent = node.textContent;
+      target.appendChild(safeLink);
+      return;
+    }
+    if (node.nodeType === Node.ELEMENT_NODE && node.tagName === "BR") {
+      target.appendChild(document.createElement("br"));
+      return;
+    }
+    target.appendChild(document.createTextNode(node.textContent));
+  });
+}
+
+const MULTI_IMAGE_EXTENSIONS = ["jpeg", "jpg", "png", "webp"];
+const SINGLE_IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp"];
+const imageExtensionCache = new Map();
+
+function getImageCacheKey(folder, device, qty) {
+  return `${folder}|${device}|${qty > 1 ? "multi" : "single"}`;
+}
+
+function getImageBasePath(folder, device, idx, qty) {
+  const suffix = qty > 1 ? `-${(idx % qty) + 1}` : "";
+  return `galeria/${folder}/${device}${suffix}`;
+}
+
+function getExtensionCandidates(folder, device, qty) {
+  const defaults = qty > 1 ? MULTI_IMAGE_EXTENSIONS : SINGLE_IMAGE_EXTENSIONS;
+  const key = getImageCacheKey(folder, device, qty);
+  if (!imageExtensionCache.has(key)) {
+    return defaults.slice();
+  }
+  const cached = imageExtensionCache.get(key);
+  return [cached, ...defaults.filter((ext) => ext !== cached)];
+}
+
+function resolveImageSrc(folder, device, idx, qty) {
+  const base = getImageBasePath(folder, device, idx, qty);
+  const candidates = getExtensionCandidates(folder, device, qty);
+  return `${base}.${candidates[0]}`;
+}
+
+function getPlaceholderForDevice(device) {
+  return device === "ordenador"
+    ? "galeria/_placeholder/ordenador.png"
+    : "galeria/_placeholder/movil.png";
+}
+
+function setImageSrcWithFallback(imgEl, folder, device, idx, qty, onLoad) {
+  const base = getImageBasePath(folder, device, idx, qty);
+  const key = getImageCacheKey(folder, device, qty);
+  const candidates = getExtensionCandidates(folder, device, qty);
+  let attempt = 0;
+  imgEl.dataset.folder = folder;
+  imgEl.dataset.device = device;
+  imgEl.dataset.qty = String(qty);
+  imgEl.dataset.currentIndex = String(idx);
+
+  const tryNext = () => {
+    if (attempt >= candidates.length) {
+      imgEl.src = getPlaceholderForDevice(device);
+      if (typeof onLoad === "function") onLoad();
+      return;
+    }
+    const ext = candidates[attempt++];
+    const src = `${base}.${ext}`;
+    const handleLoad = () => {
+      cleanup();
+      imageExtensionCache.set(key, ext);
+      if (typeof onLoad === "function") onLoad();
     };
-
-    function appendSafeRichText(target, html = '') {
-      if (!html) return;
-      const temp = document.createElement('div');
-      temp.innerHTML = html;
-      Array.from(temp.childNodes).forEach(node => {
-        if (node.nodeType === Node.TEXT_NODE) {
-          target.appendChild(document.createTextNode(node.textContent));
-          return;
-        }
-        if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'A') {
-          const safeLink = document.createElement('a');
-          const href = node.getAttribute('href');
-          if (href) safeLink.href = href;
-          const targetAttr = node.getAttribute('target');
-          if (targetAttr) safeLink.target = targetAttr;
-          safeLink.rel = node.getAttribute('rel') || 'noopener noreferrer';
-          safeLink.textContent = node.textContent;
-          target.appendChild(safeLink);
-          return;
-        }
-        if (node.nodeType === Node.ELEMENT_NODE && node.tagName === 'BR') {
-          target.appendChild(document.createElement('br'));
-          return;
-        }
-        target.appendChild(document.createTextNode(node.textContent));
-      });
-    }
-
-    const MULTI_IMAGE_EXTENSIONS = ['jpeg', 'jpg', 'png', 'webp'];
-    const SINGLE_IMAGE_EXTENSIONS = ['png', 'jpg', 'jpeg', 'webp'];
-    const imageExtensionCache = new Map();
-
-    function getImageCacheKey(folder, device, qty) {
-      return `${folder}|${device}|${qty > 1 ? 'multi' : 'single'}`;
-    }
-
-    function getImageBasePath(folder, device, idx, qty) {
-      const suffix = qty > 1 ? `-${(idx % qty) + 1}` : '';
-      return `galeria/${folder}/${device}${suffix}`;
-    }
-
-    function getExtensionCandidates(folder, device, qty) {
-      const defaults = qty > 1 ? MULTI_IMAGE_EXTENSIONS : SINGLE_IMAGE_EXTENSIONS;
-      const key = getImageCacheKey(folder, device, qty);
-      if (!imageExtensionCache.has(key)) {
-        return defaults.slice();
-      }
-      const cached = imageExtensionCache.get(key);
-      return [cached, ...defaults.filter(ext => ext !== cached)];
-    }
-
-    function resolveImageSrc(folder, device, idx, qty) {
-      const base = getImageBasePath(folder, device, idx, qty);
-      const candidates = getExtensionCandidates(folder, device, qty);
-      return `${base}.${candidates[0]}`;
-    }
-
-    function getPlaceholderForDevice(device) {
-      return device === 'ordenador'
-        ? 'galeria/_placeholder/ordenador.png'
-        : 'galeria/_placeholder/movil.png';
-    }
-
-    function setImageSrcWithFallback(imgEl, folder, device, idx, qty, onLoad) {
-      const base = getImageBasePath(folder, device, idx, qty);
-      const key = getImageCacheKey(folder, device, qty);
-      const candidates = getExtensionCandidates(folder, device, qty);
-      let attempt = 0;
-      imgEl.dataset.folder = folder;
-      imgEl.dataset.device = device;
-      imgEl.dataset.qty = String(qty);
-      imgEl.dataset.currentIndex = String(idx);
-
-      const tryNext = () => {
-        if (attempt >= candidates.length) {
-          imgEl.src = getPlaceholderForDevice(device);
-          if (typeof onLoad === 'function') onLoad();
-          return;
-        }
-        const ext = candidates[attempt++];
-        const src = `${base}.${ext}`;
-        const handleLoad = () => {
-          cleanup();
-          imageExtensionCache.set(key, ext);
-          if (typeof onLoad === 'function') onLoad();
-        };
-        const handleError = () => {
-          cleanup();
-          tryNext();
-        };
-        const cleanup = () => {
-          imgEl.removeEventListener('load', handleLoad);
-          imgEl.removeEventListener('error', handleError);
-        };
-        imgEl.addEventListener('load', handleLoad, { once: true });
-        imgEl.addEventListener('error', handleError, { once: true });
-        imgEl.src = src;
-      };
-
+    const handleError = () => {
+      cleanup();
       tryNext();
-    }
-
-    function crearGaleria(webs, lang = 'ES') {
-      const contenedor = document.getElementById('galeriaWebs');
-      contenedor.textContent = '';
-      webs.forEach(web => {
-        const article = document.createElement('article');
-        article.className = 'web-card';
-        const texto = web[`texto${lang}`] || web.textoES || '';
-        const altDesktop = {
-          ES: `vista escritorio de ${web.nombre}`,
-          EN: `desktop view of ${web.nombre}`,
-          FR: `aperçu bureau de ${web.nombre}`,
-          CAT: `vista d'escriptori de ${web.nombre}`
-        }[lang];
-
-        const altMobile = {
-          ES: `vista móvil de ${web.nombre}`,
-          EN: `mobile view of ${web.nombre}`,
-          FR: `aperçu mobile de ${web.nombre}`,
-          CAT: `vista mòbil de ${web.nombre}`
-        }[lang];
-        const qty = web.imgQuantity || 1;
-
-        const preview = document.createElement('div');
-        preview.className = `web-preview ${web.movilPos === 'right' ? 'movil-derecha' : 'movil-izquierda'}`;
-        preview.dataset.folder = web.carpeta;
-        preview.dataset.qty = String(qty);
-
-        const desktopImg = document.createElement('img');
-        desktopImg.alt = altDesktop;
-        desktopImg.className = 'img-ordenador img-fade';
-        desktopImg.loading = 'lazy';
-        desktopImg.decoding = 'async';
-
-        const mobileImg = document.createElement('img');
-        mobileImg.alt = altMobile;
-        mobileImg.className = 'img-movil img-fade';
-        mobileImg.loading = 'lazy';
-        mobileImg.decoding = 'async';
-        setImageSrcWithFallback(desktopImg, web.carpeta, 'ordenador', 0, qty);
-        setImageSrcWithFallback(mobileImg, web.carpeta, 'movil', 0, qty);
-
-        preview.appendChild(desktopImg);
-        preview.appendChild(mobileImg);
-
-        const textDiv = document.createElement('div');
-        textDiv.className = 'web-texto';
-        if (/<a\b/i.test(texto)) {
-          appendSafeRichText(textDiv, texto);
-        } else {
-          textDiv.textContent = texto;
-        }
-
-        article.appendChild(preview);
-        article.appendChild(textDiv);
-        contenedor.appendChild(article);
-      });
-    }
-
-    // ==========================
-    // Slideshow con "respirar" y efecto ola
-    // ==========================
-    const TOTAL_WEB_COUNT = websRealizadas.length; // cache: no hace falta contar DOM cada vez
-    const BASE_PER_CARD_MS = 800; // base de 0.8s por tarjeta para ola completa
-    const slideControllers = new Map();
-
-    function preload(folder, device, idx, qty) {
-      const im = new Image();
-      im.decoding = 'async';
-      im.loading = 'eager';
-      im.src = resolveImageSrc(folder, device, idx, qty);
-    }
-
-    function swapSrcWithFade(imgEl, folder, device, idx, qty) {
-      imgEl.classList.add('is-hidden');
-      requestAnimationFrame(() => {
-        setImageSrcWithFallback(imgEl, folder, device, idx, qty, () => {
-          imgEl.classList.remove('is-hidden');
-        });
-      });
-    }
-
-    function resetSlides() {
-      slideControllers.forEach(controller => controller.destroy());
-      slideControllers.clear();
-    }
-
-    function createSlideController(folder, qty, desk, mob, startDelay, intervalMs) {
-      let cur = 0;
-      let intervalId = null;
-      let timeoutId = null;
-
-      function advance() {
-        if (document.hidden) return;
-        desk.classList.add('breathing');
-        mob.classList.add('breathing');
-        setTimeout(() => {
-          desk.classList.remove('breathing');
-          mob.classList.remove('breathing');
-        }, 900);
-        const next = (cur + 1) % qty;
-        preload(folder, 'ordenador', next, qty);
-        preload(folder, 'movil', next, qty);
-        cur = next;
-        swapSrcWithFade(desk, folder, 'ordenador', cur, qty);
-        swapSrcWithFade(mob, folder, 'movil', cur, qty);
-      }
-
-      function start() {
-        if (intervalId || timeoutId) return;
-        timeoutId = setTimeout(() => {
-          advance();
-          intervalId = setInterval(advance, intervalMs);
-        }, startDelay);
-      }
-
-      function destroy() {
-        if (timeoutId) {
-          clearTimeout(timeoutId);
-          timeoutId = null;
-        }
-        if (intervalId) {
-          clearInterval(intervalId);
-          intervalId = null;
-        }
-      }
-
-      return { start, destroy };
-    }
-
-    function setupSlides() {
-      resetSlides();
-      const cards = Array.from(document.querySelectorAll('.web-preview'));
-      if (!cards.length) return;
-      const total = TOTAL_WEB_COUNT || cards.length || 1;
-      const SLIDE_INTERVAL_MS = Math.max(3500, total * BASE_PER_CARD_MS); // ola completa
-      const STAGGER = Math.floor(SLIDE_INTERVAL_MS / total); // retraso escalonado
-
-      cards.forEach((card, idx) => {
-        const folder = card.getAttribute('data-folder');
-        const qty = parseInt(card.getAttribute('data-qty') || '1', 10);
-        if (!folder || qty <= 1) return; // sin slideshow si solo hay 1
-
-        const desk = card.querySelector('.img-ordenador');
-        const mob = card.querySelector('.img-movil');
-        if (!desk || !mob) return;
-
-        const controller = createSlideController(folder, qty, desk, mob, idx * STAGGER, SLIDE_INTERVAL_MS);
-        slideControllers.set(card, controller);
-        controller.start();
-      });
-    }
-
-    let currentLangIndex = 0; // ES por defecto
-    function applyLanguage(lang) {
-      const c = document.querySelector('.container');
-      const h = document.querySelector('.pre-header-cloud');
-      if (c && h) {
-        c.style.transition = h.style.transition = 'opacity 250ms';
-        c.style.opacity = h.style.opacity = '0.35';
-      }
-      const t = textosMain[lang];
-      // Actualiza <html lang> y <title> según el idioma activo
-      document.documentElement.setAttribute('lang',
-        lang === 'ES' ? 'es' : lang === 'EN' ? 'en' : lang === 'FR' ? 'fr' : 'ca');
-
-      const titles = {
-        ES: 'beca de digitalización meowrhino',
-        EN: 'meowrhino digitization grant',
-        FR: 'bourse de numérisation meowrhino',
-        CAT: 'beca de digitalització meowrhino'
-      };
-      document.title = titles[lang] || titles.ES;
-      document.querySelector('#mainTitle').innerHTML = t.mainTitle;
-      document.querySelector('#whyTitle').textContent = t.whyTitle;
-      document.querySelector('#whyP1').textContent = t.whyP1;
-      document.querySelector('#whyP2').textContent = t.whyP2;
-      crearGaleria(websRealizadas, lang);
-      setupSlides();
-      const btn = document.querySelector('#toggleLang');
-      if (btn) btn.textContent = lang;
-      requestAnimationFrame(() => { if (c && h) { c.style.opacity = h.style.opacity = '1'; } });
-    }
-
-    const getInitialLang = () => {
-      const qp = new URLSearchParams(location.search).get('lang');
-      const fromQS = qp && LANGS.includes(qp.toUpperCase()) ? qp.toUpperCase() : null;
-      return fromQS || localStorage.getItem('lang') || 'ES';
     };
-    const setLangInURL = (lang) => {
-      const u = new URL(location.href);
-      u.searchParams.set('lang', lang);
-      history.replaceState(null, '', u);
+    const cleanup = () => {
+      imgEl.removeEventListener("load", handleLoad);
+      imgEl.removeEventListener("error", handleError);
     };
+    imgEl.addEventListener("load", handleLoad, { once: true });
+    imgEl.addEventListener("error", handleError, { once: true });
+    imgEl.src = src;
+  };
 
-    document.addEventListener('DOMContentLoaded', () => {
-      const initial = getInitialLang();
-      currentLangIndex = LANGS.indexOf(initial);
-      applyLanguage(initial);
-      const langBtn = document.querySelector('#toggleLang');
-      langBtn.addEventListener('click', () => {
-        currentLangIndex = (currentLangIndex + 1) % LANGS.length;
-        const lang = LANGS[currentLangIndex];
-        localStorage.setItem('lang', lang);
-        setLangInURL(lang);
-        applyLanguage(lang);
-      });
+  tryNext();
+}
+
+function crearGaleria(webs, lang = "ES") {
+  const contenedor = document.getElementById("galeriaWebs");
+  contenedor.textContent = "";
+  webs.forEach((web) => {
+    const article = document.createElement("article");
+    article.className = "web-card";
+    const texto = web[`texto${lang}`] || web.textoES || "";
+    const altDesktop = {
+      ES: `vista escritorio de ${web.nombre}`,
+      EN: `desktop view of ${web.nombre}`,
+      FR: `aperçu bureau de ${web.nombre}`,
+      CAT: `vista d'escriptori de ${web.nombre}`,
+    }[lang];
+
+    const altMobile = {
+      ES: `vista móvil de ${web.nombre}`,
+      EN: `mobile view of ${web.nombre}`,
+      FR: `aperçu mobile de ${web.nombre}`,
+      CAT: `vista mòbil de ${web.nombre}`,
+    }[lang];
+    const qty = web.imgQuantity || 1;
+
+    const preview = document.createElement("div");
+    preview.className = `web-preview ${
+      web.movilPos === "right" ? "movil-derecha" : "movil-izquierda"
+    }`;
+    preview.dataset.folder = web.carpeta;
+    preview.dataset.qty = String(qty);
+
+    const desktopImg = document.createElement("img");
+    desktopImg.alt = altDesktop;
+    desktopImg.className = "img-ordenador img-fade";
+    desktopImg.loading = "lazy";
+    desktopImg.decoding = "async";
+
+    const mobileImg = document.createElement("img");
+    mobileImg.alt = altMobile;
+    mobileImg.className = "img-movil img-fade";
+    mobileImg.loading = "lazy";
+    mobileImg.decoding = "async";
+    setImageSrcWithFallback(desktopImg, web.carpeta, "ordenador", 0, qty);
+    setImageSrcWithFallback(mobileImg, web.carpeta, "movil", 0, qty);
+
+    preview.appendChild(desktopImg);
+    preview.appendChild(mobileImg);
+
+    const textDiv = document.createElement("div");
+    textDiv.className = "web-texto";
+    if (/<a\b/i.test(texto)) {
+      appendSafeRichText(textDiv, texto);
+    } else {
+      textDiv.textContent = texto;
+    }
+
+    article.appendChild(preview);
+    article.appendChild(textDiv);
+    contenedor.appendChild(article);
+  });
+}
+
+// ==========================
+// Slideshow con "respirar" y efecto ola
+// ==========================
+const TOTAL_WEB_COUNT = websRealizadas.length; // cache: no hace falta contar DOM cada vez
+const BASE_PER_CARD_MS = 800; // base de 0.8s por tarjeta para ola completa
+const slideControllers = new Map();
+
+function preload(folder, device, idx, qty) {
+  const im = new Image();
+  im.decoding = "async";
+  im.loading = "eager";
+  im.src = resolveImageSrc(folder, device, idx, qty);
+}
+
+function swapSrcWithFade(imgEl, folder, device, idx, qty) {
+  imgEl.classList.add("is-hidden");
+  requestAnimationFrame(() => {
+    setImageSrcWithFallback(imgEl, folder, device, idx, qty, () => {
+      imgEl.classList.remove("is-hidden");
     });
+  });
+}
 
-  
+function resetSlides() {
+  slideControllers.forEach((controller) => controller.destroy());
+  slideControllers.clear();
+}
+
+function createSlideController(folder, qty, desk, mob, startDelay, intervalMs) {
+  let cur = 0;
+  let intervalId = null;
+  let timeoutId = null;
+
+  function advance() {
+    if (document.hidden) return;
+    desk.classList.add("breathing");
+    mob.classList.add("breathing");
+    setTimeout(() => {
+      desk.classList.remove("breathing");
+      mob.classList.remove("breathing");
+    }, 900);
+    const next = (cur + 1) % qty;
+    preload(folder, "ordenador", next, qty);
+    preload(folder, "movil", next, qty);
+    cur = next;
+    swapSrcWithFade(desk, folder, "ordenador", cur, qty);
+    swapSrcWithFade(mob, folder, "movil", cur, qty);
+  }
+
+  function start() {
+    if (intervalId || timeoutId) return;
+    timeoutId = setTimeout(() => {
+      advance();
+      intervalId = setInterval(advance, intervalMs);
+    }, startDelay);
+  }
+
+  function destroy() {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+      timeoutId = null;
+    }
+    if (intervalId) {
+      clearInterval(intervalId);
+      intervalId = null;
+    }
+  }
+
+  return { start, destroy };
+}
+
+function setupSlides() {
+  resetSlides();
+  const cards = Array.from(document.querySelectorAll(".web-preview"));
+  if (!cards.length) return;
+  const total = TOTAL_WEB_COUNT || cards.length || 1;
+  const SLIDE_INTERVAL_MS = Math.max(3500, total * BASE_PER_CARD_MS); // ola completa
+  const STAGGER = Math.floor(SLIDE_INTERVAL_MS / total); // retraso escalonado
+
+  cards.forEach((card, idx) => {
+    const folder = card.getAttribute("data-folder");
+    const qty = parseInt(card.getAttribute("data-qty") || "1", 10);
+    if (!folder || qty <= 1) return; // sin slideshow si solo hay 1
+
+    const desk = card.querySelector(".img-ordenador");
+    const mob = card.querySelector(".img-movil");
+    if (!desk || !mob) return;
+
+    const controller = createSlideController(
+      folder,
+      qty,
+      desk,
+      mob,
+      idx * STAGGER,
+      SLIDE_INTERVAL_MS
+    );
+    slideControllers.set(card, controller);
+    controller.start();
+  });
+}
+
+let currentLangIndex = 0; // ES por defecto
+function applyLanguage(lang) {
+  const c = document.querySelector(".container");
+  const h = document.querySelector(".pre-header-cloud");
+  if (c && h) {
+    c.style.transition = h.style.transition = "opacity 250ms";
+    c.style.opacity = h.style.opacity = "0.35";
+  }
+  const t = textosMain[lang];
+  // Actualiza <html lang> y <title> según el idioma activo
+  document.documentElement.setAttribute(
+    "lang",
+    lang === "ES" ? "es" : lang === "EN" ? "en" : lang === "FR" ? "fr" : "ca"
+  );
+
+  const titles = {
+    ES: "beca de digitalización meowrhino",
+    EN: "meowrhino digitization grant",
+    FR: "bourse de numérisation meowrhino",
+    CAT: "beca de digitalització meowrhino",
+  };
+  document.title = titles[lang] || titles.ES;
+  document.querySelector("#mainTitle").innerHTML = t.mainTitle;
+  document.querySelector("#whyTitle").textContent = t.whyTitle;
+  document.querySelector("#whyP1").textContent = t.whyP1;
+  document.querySelector("#whyP2").textContent = t.whyP2;
+  crearGaleria(websRealizadas, lang);
+  setupSlides();
+  const btn = document.querySelector("#toggleLang");
+  if (btn) btn.textContent = lang;
+  requestAnimationFrame(() => {
+    if (c && h) {
+      c.style.opacity = h.style.opacity = "1";
+    }
+  });
+}
+
+const getInitialLang = () => {
+  const qp = new URLSearchParams(location.search).get("lang");
+  const fromQS =
+    qp && LANGS.includes(qp.toUpperCase()) ? qp.toUpperCase() : null;
+  return fromQS || localStorage.getItem("lang") || "ES";
+};
+const setLangInURL = (lang) => {
+  const u = new URL(location.href);
+  u.searchParams.set("lang", lang);
+  history.replaceState(null, "", u);
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+  const initial = getInitialLang();
+  currentLangIndex = LANGS.indexOf(initial);
+  applyLanguage(initial);
+  const langBtn = document.querySelector("#toggleLang");
+  langBtn.addEventListener("click", () => {
+    currentLangIndex = (currentLangIndex + 1) % LANGS.length;
+    const lang = LANGS[currentLangIndex];
+    localStorage.setItem("lang", lang);
+    setLangInURL(lang);
+    applyLanguage(lang);
+  });
+});
