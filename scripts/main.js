@@ -345,6 +345,18 @@
         textoEN: "official page of <a target='_blank' href='https://elmundodelasjordis.com/'>las jordis</a>. It contains four sections with integrated text editors so we can keep up with their adventures.",
         textoFR: "page officielle de <a target='_blank' href='https://elmundodelasjordis.com/'>las jordis</a>. Elle comporte quatre sections avec des éditeurs de texte intégrés pour que nous puissions suivre leurs aventures.",
         textoCAT: "pàgina oficial de <a target='_blank' href='https://elmundodelasjordis.com/'>les jordis</a>. Conté quatre seccions amb editors de text integrats perquè puguem seguir les seves aventures."
+      },
+
+      {
+        nombre: "miranda perez-hita",
+        carpeta: "mph",
+        link: "https://mirandaperezhita.com/",
+        movilPos: "left",
+        imgQuantity: 5,
+        textoES: "portfolio de diseño gráfico de <a target='_blank' href='https://mirandaperezhita.com/'>miranda</a>. Se compone de un scroll y un menú de navegación responsive con idiomas y colores según proyecto.",
+        textoEN: "graphic design portfolio of <a target='_blank' href='https://mirandaperezhita.com/'>miranda</a>. It features a single scroll and a responsive navigation menu with languages and colors per project.",
+        textoFR: "portfolio de design graphique de <a target='_blank' href='https://mirandaperezhita.com/'>miranda</a>. Une page à défilement unique et un menu de navigation responsive avec langues et couleurs propres à chaque projet.",
+        textoCAT: "portfolio de disseny gràfic de <a target='_blank' href='https://mirandaperezhita.com/'>miranda</a>. Consta d’un scroll i un menú de navegació responsive amb idiomes i colors segons projecte."
       }
     ];
 
