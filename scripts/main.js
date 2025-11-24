@@ -644,9 +644,14 @@ function crearGaleria(webs, lang = "ES") {
         indicators.appendChild(dot);
       }
 
-      controls.appendChild(prevBtn);
-      controls.appendChild(pauseBtn);
-      controls.appendChild(nextBtn);
+      // Wrapper para los botones
+      const buttonsWrapper = document.createElement('div');
+      buttonsWrapper.className = 'controls-buttons';
+      buttonsWrapper.appendChild(prevBtn);
+      buttonsWrapper.appendChild(pauseBtn);
+      buttonsWrapper.appendChild(nextBtn);
+
+      controls.appendChild(buttonsWrapper);
       controls.appendChild(indicators);
       preview.appendChild(controls);
     }
@@ -716,7 +721,7 @@ function createSlideController(folder, qty, desk, mob, card, startDelay, interva
   let cur = 0;
   let intervalId = null;
   let timeoutId = null;
-  let isPaused = false;
+  let isPaused = true;  // Empezar pausado por defecto
   let isVisible = false;
 
   const pauseBtn = card.querySelector(".pause-btn");
@@ -847,6 +852,12 @@ function createSlideController(folder, qty, desk, mob, card, startDelay, interva
   });
 
   updateIndicators();
+
+  // Inicializar botón de pausa como pausado (mostrar ▶)
+  if (pauseBtn) {
+    pauseBtn.textContent = '▶';
+    pauseBtn.classList.add('paused');
+  }
 
   return { start, destroy, pause, resume, setVisible };
 }

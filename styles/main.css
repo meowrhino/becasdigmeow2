@@ -837,15 +837,17 @@ a {
   left: 50%;
   transform: translateX(-50%);
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   z-index: 10;
-  opacity: 0;
-  transition: opacity 0.3s ease;
+  opacity: 1;  /* Siempre visibles */
 }
 
-.web-preview:hover .slideshow-controls {
-  opacity: 1;
+.slideshow-controls .controls-buttons {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .slideshow-btn {
@@ -904,7 +906,6 @@ a {
 
 @media (max-width: 600px) {
   .slideshow-controls {
-    opacity: 1;
     bottom: 10px;
   }
 
