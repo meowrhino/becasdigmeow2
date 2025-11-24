@@ -606,6 +606,51 @@ function crearGaleria(webs, lang = "ES") {
     preview.appendChild(desktopImg);
     preview.appendChild(mobileImg);
 
+    // Event listeners para fullscreen
+    desktopImg.addEventListener('click', () => {
+      openFullscreen(web.carpeta, qty, 'ordenador', 0);
+    });
+    mobileImg.addEventListener('click', () => {
+      openFullscreen(web.carpeta, qty, 'movil', 0);
+    });
+
+    // Añadir controles e indicadores si hay más de 1 imagen
+    if (qty > 1) {
+      const controls = document.createElement('div');
+      controls.className = 'slideshow-controls';
+
+      const prevBtn = document.createElement('button');
+      prevBtn.className = 'slideshow-btn prev-btn';
+      prevBtn.setAttribute('aria-label', 'Imagen anterior');
+      prevBtn.textContent = '◀';
+
+      const pauseBtn = document.createElement('button');
+      pauseBtn.className = 'slideshow-btn pause-btn';
+      pauseBtn.setAttribute('aria-label', 'Pausar slideshow');
+      pauseBtn.textContent = '⏸';
+
+      const nextBtn = document.createElement('button');
+      nextBtn.className = 'slideshow-btn next-btn';
+      nextBtn.setAttribute('aria-label', 'Imagen siguiente');
+      nextBtn.textContent = '▶';
+
+      const indicators = document.createElement('div');
+      indicators.className = 'slide-indicators';
+      for (let i = 0; i < qty; i++) {
+        const dot = document.createElement('span');
+        dot.className = 'dot';
+        if (i === 0) dot.classList.add('active');
+        dot.setAttribute('aria-label', `Ir a imagen ${i + 1}`);
+        indicators.appendChild(dot);
+      }
+
+      controls.appendChild(prevBtn);
+      controls.appendChild(pauseBtn);
+      controls.appendChild(nextBtn);
+      controls.appendChild(indicators);
+      preview.appendChild(controls);
+    }
+
     const textDiv = document.createElement("div");
     textDiv.className = "web-texto";
     if (/<a\b/i.test(texto)) {
@@ -621,11 +666,18 @@ function crearGaleria(webs, lang = "ES") {
 }
 
 // ==========================
-// Slideshow con "respirar" y efecto ola
+// Slideshow con "respirar", efecto ola y controles
 // ==========================
+const SLIDESHOW_CONFIG = {
+  minInterval: 3500, // mínimo 3.5s entre cambios
+  basePerCard: 800, // 0.8s adicionales por tarjeta para ola completa
+  breathingDuration: 900, // duración del efecto breathing
+  fadeDuration: 250, // duración del fade
+};
+
 const TOTAL_WEB_COUNT = websRealizadas.length; // cache: no hace falta contar DOM cada vez
-const BASE_PER_CARD_MS = 800; // base de 0.8s por tarjeta para ola completa
 const slideControllers = new Map();
+let intersectionObserver = null;
 
 function preload(folder, device, idx, qty) {
   const im = new Image();
@@ -646,38 +698,92 @@ function swapSrcWithFade(imgEl, folder, device, idx, qty) {
 function resetSlides() {
   slideControllers.forEach((controller) => controller.destroy());
   slideControllers.clear();
+  if (intersectionObserver) {
+    intersectionObserver.disconnect();
+    intersectionObserver = null;
+  }
 }
 
-function createSlideController(folder, qty, desk, mob, startDelay, intervalMs) {
+function calculateTimings(totalCards) {
+  const fullCycle = Math.max(
+    SLIDESHOW_CONFIG.minInterval,
+    totalCards * SLIDESHOW_CONFIG.basePerCard
+  );
+  return { fullCycle };
+}
+
+function createSlideController(folder, qty, desk, mob, card, startDelay, intervalMs) {
   let cur = 0;
   let intervalId = null;
   let timeoutId = null;
+  let isPaused = false;
+  let isVisible = false;
 
-  function advance() {
-    if (document.hidden) return;
+  const pauseBtn = card.querySelector(".pause-btn");
+  const prevBtn = card.querySelector(".prev-btn");
+  const nextBtn = card.querySelector(".next-btn");
+  const indicators = Array.from(card.querySelectorAll(".slide-indicators .dot"));
+  const indicatorHandlers = indicators.map((dot, index) => ({
+    dot,
+    handler: () => goToSlide(index),
+  }));
+
+  function updateIndicators() {
+    indicators.forEach((dot, i) => {
+      dot.classList.toggle("active", i === cur);
+    });
+  }
+
+  function breathe() {
     desk.classList.add("breathing");
     mob.classList.add("breathing");
     setTimeout(() => {
       desk.classList.remove("breathing");
       mob.classList.remove("breathing");
-    }, 900);
-    const next = (cur + 1) % qty;
-    preload(folder, "ordenador", next, qty);
-    preload(folder, "movil", next, qty);
-    cur = next;
+    }, SLIDESHOW_CONFIG.breathingDuration);
+  }
+
+  function showSlide(index) {
+    breathe();
+    preload(folder, "ordenador", index, qty);
+    preload(folder, "movil", index, qty);
+    cur = index;
     swapSrcWithFade(desk, folder, "ordenador", cur, qty);
     swapSrcWithFade(mob, folder, "movil", cur, qty);
+    updateIndicators();
+  }
+
+  function advance() {
+    if (document.hidden || !isVisible) return;
+    const next = (cur + 1) % qty;
+    showSlide(next);
+  }
+
+  function goToSlide(index) {
+    if (index === cur) return;
+    showSlide(index);
+  }
+
+  function prev() {
+    const prevIndex = (cur - 1 + qty) % qty;
+    goToSlide(prevIndex);
+  }
+
+  function next() {
+    const nextIndex = (cur + 1) % qty;
+    goToSlide(nextIndex);
   }
 
   function start() {
-    if (intervalId || timeoutId) return;
+    if (intervalId || timeoutId || isPaused || !isVisible) return;
     timeoutId = setTimeout(() => {
+      timeoutId = null;
       advance();
       intervalId = setInterval(advance, intervalMs);
     }, startDelay);
   }
 
-  function destroy() {
+  function clearTimers() {
     if (timeoutId) {
       clearTimeout(timeoutId);
       timeoutId = null;
@@ -688,16 +794,85 @@ function createSlideController(folder, qty, desk, mob, startDelay, intervalMs) {
     }
   }
 
-  return { start, destroy };
+  function pause() {
+    isPaused = true;
+    clearTimers();
+    if (pauseBtn) {
+      pauseBtn.textContent = "▶";
+      pauseBtn.classList.add("paused");
+    }
+  }
+
+  function resume() {
+    isPaused = false;
+    if (pauseBtn) {
+      pauseBtn.textContent = "⏸";
+      pauseBtn.classList.remove("paused");
+    }
+    if (isVisible) start();
+  }
+
+  function togglePause() {
+    if (isPaused) {
+      resume();
+    } else {
+      pause();
+    }
+  }
+
+  function setVisible(visible) {
+    isVisible = visible;
+    if (visible && !isPaused) {
+      start();
+    } else if (!visible) {
+      clearTimers();
+    }
+  }
+
+  function destroy() {
+    clearTimers();
+    if (pauseBtn) pauseBtn.removeEventListener("click", togglePause);
+    if (prevBtn) prevBtn.removeEventListener("click", prev);
+    if (nextBtn) nextBtn.removeEventListener("click", next);
+    indicatorHandlers.forEach(({ dot, handler }) => {
+      dot.removeEventListener("click", handler);
+    });
+  }
+
+  if (pauseBtn) pauseBtn.addEventListener("click", togglePause);
+  if (prevBtn) prevBtn.addEventListener("click", prev);
+  if (nextBtn) nextBtn.addEventListener("click", next);
+  indicatorHandlers.forEach(({ dot, handler }) => {
+    dot.addEventListener("click", handler);
+  });
+
+  updateIndicators();
+
+  return { start, destroy, pause, resume, setVisible };
 }
 
 function setupSlides() {
   resetSlides();
   const cards = Array.from(document.querySelectorAll(".web-preview"));
   if (!cards.length) return;
+
   const total = TOTAL_WEB_COUNT || cards.length || 1;
-  const SLIDE_INTERVAL_MS = Math.max(3500, total * BASE_PER_CARD_MS); // ola completa
-  const STAGGER = Math.floor(SLIDE_INTERVAL_MS / total); // retraso escalonado
+  const { fullCycle } = calculateTimings(total);
+
+  intersectionObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        const controller = slideControllers.get(entry.target);
+        if (controller) {
+          controller.setVisible(entry.isIntersecting);
+        }
+      });
+    },
+    {
+      threshold: 0.3, // 30% visible para activar
+      rootMargin: "50px", // Empezar un poco antes
+    }
+  );
 
   cards.forEach((card, idx) => {
     const folder = card.getAttribute("data-folder");
@@ -713,12 +888,152 @@ function setupSlides() {
       qty,
       desk,
       mob,
-      idx * STAGGER,
-      SLIDE_INTERVAL_MS
+      card,
+      0, // Sin efecto ola, todas empiezan a la vez
+      fullCycle
     );
+
     slideControllers.set(card, controller);
-    controller.start();
+    intersectionObserver.observe(card);
   });
+}
+
+// ==========================
+// Modal Fullscreen
+// ==========================
+let fullscreenState = {
+  folder: null,
+  qty: 0,
+  device: null,
+  currentIndex: 0,
+};
+
+function createFullscreenModal() {
+  const modal = document.createElement('div');
+  modal.id = 'fullscreenModal';
+  modal.className = 'fullscreen-modal';
+
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'close-btn';
+  closeBtn.textContent = '✕';
+  closeBtn.setAttribute('aria-label', 'Cerrar');
+
+  const prevBtn = document.createElement('button');
+  prevBtn.className = 'nav-btn prev-fullscreen';
+  prevBtn.textContent = '◀';
+  prevBtn.setAttribute('aria-label', 'Anterior');
+
+  const nextBtn = document.createElement('button');
+  nextBtn.className = 'nav-btn next-fullscreen';
+  nextBtn.textContent = '▶';
+  nextBtn.setAttribute('aria-label', 'Siguiente');
+
+  const img = document.createElement('img');
+  img.className = 'fullscreen-img';
+  img.alt = 'Imagen en pantalla completa';
+
+  const indicators = document.createElement('div');
+  indicators.className = 'fullscreen-indicators';
+
+  modal.appendChild(closeBtn);
+  modal.appendChild(prevBtn);
+  modal.appendChild(img);
+  modal.appendChild(nextBtn);
+  modal.appendChild(indicators);
+  document.body.appendChild(modal);
+
+  // Event listeners
+  closeBtn.addEventListener('click', closeFullscreen);
+  prevBtn.addEventListener('click', () => navigateFullscreen(-1));
+  nextBtn.addEventListener('click', () => navigateFullscreen(1));
+
+  // Click fuera de la imagen cierra
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      closeFullscreen();
+    }
+  });
+
+  // Tecla Escape cierra
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.classList.contains('active')) {
+      closeFullscreen();
+    }
+  });
+
+  // Flechas de teclado para navegar
+  document.addEventListener('keydown', (e) => {
+    if (!modal.classList.contains('active')) return;
+    if (e.key === 'ArrowLeft') navigateFullscreen(-1);
+    if (e.key === 'ArrowRight') navigateFullscreen(1);
+  });
+
+  return modal;
+}
+
+function openFullscreen(folder, qty, device, startIndex = 0) {
+  let modal = document.getElementById('fullscreenModal');
+  if (!modal) {
+    modal = createFullscreenModal();
+  }
+
+  fullscreenState = { folder, qty, device, currentIndex: startIndex };
+
+  updateFullscreenImage();
+  updateFullscreenIndicators();
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeFullscreen() {
+  const modal = document.getElementById('fullscreenModal');
+  if (modal) {
+    modal.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+}
+
+function navigateFullscreen(direction) {
+  const { qty, currentIndex } = fullscreenState;
+  fullscreenState.currentIndex = (currentIndex + direction + qty) % qty;
+  updateFullscreenImage();
+  updateFullscreenIndicators();
+}
+
+function updateFullscreenImage() {
+  const modal = document.getElementById('fullscreenModal');
+  if (!modal) return;
+
+  const img = modal.querySelector('.fullscreen-img');
+  const { folder, device, currentIndex, qty } = fullscreenState;
+
+  img.style.opacity = '0';
+  setTimeout(() => {
+    setImageSrcWithFallback(img, folder, device, currentIndex, qty, () => {
+      img.style.opacity = '1';
+    });
+  }, 150);
+}
+
+function updateFullscreenIndicators() {
+  const modal = document.getElementById('fullscreenModal');
+  if (!modal) return;
+
+  const indicators = modal.querySelector('.fullscreen-indicators');
+  const { qty, currentIndex } = fullscreenState;
+
+  indicators.innerHTML = '';
+  for (let i = 0; i < qty; i++) {
+    const dot = document.createElement('span');
+    dot.className = 'dot';
+    if (i === currentIndex) dot.classList.add('active');
+    dot.addEventListener('click', () => {
+      fullscreenState.currentIndex = i;
+      updateFullscreenImage();
+      updateFullscreenIndicators();
+    });
+    indicators.appendChild(dot);
+  }
 }
 
 let currentLangIndex = 0; // ES por defecto
@@ -729,6 +1044,7 @@ function applyLanguage(lang) {
     c.style.transition = h.style.transition = "opacity 250ms";
     c.style.opacity = h.style.opacity = "0.35";
   }
+  resetSlides();
   const t = textosMain[lang];
   // Actualiza <html lang> y <title> según el idioma activo
   document.documentElement.setAttribute(
@@ -742,6 +1058,7 @@ function applyLanguage(lang) {
     FR: "bourse de numérisation meowrhino",
     CAT: "beca de digitalització meowrhino",
   };
+
   document.title = titles[lang] || titles.ES;
   document.querySelector("#mainTitle").innerHTML = t.mainTitle;
   document.querySelector("#whyTitle").textContent = t.whyTitle;
