@@ -19,8 +19,8 @@
     const isMobile = window.innerWidth <= 600;
 
     const count = isMobile
-      ? Math.floor(randomBetween(30, 50))
-      : Math.floor(randomBetween(80, 120));
+      ? Math.floor(randomBetween(20, 35))
+      : Math.floor(randomBetween(50, 90));
 
     return {
       count,
@@ -674,8 +674,9 @@ function crearGaleria(webs, lang = "ES") {
 // Slideshow con "respirar", efecto ola y controles
 // ==========================
 const SLIDESHOW_CONFIG = {
-  minInterval: 3500, // mínimo 3.5s entre cambios
-  basePerCard: 800, // 0.8s adicionales por tarjeta para ola completa
+  intervalMs: 4500, // intervalo fijo entre cambios (ajusta aquí); pon null para cálculo automático
+  minInterval: 3500, // usado solo si intervalMs es null
+  basePerCard: 800, // usado solo si intervalMs es null
   breathingDuration: 900, // duración del efecto breathing
   fadeDuration: 250, // duración del fade
 };
@@ -709,12 +710,14 @@ function resetSlides() {
   }
 }
 
-function calculateTimings(totalCards) {
-  const fullCycle = Math.max(
+function getIntervalMs(totalCards) {
+  if (Number.isFinite(SLIDESHOW_CONFIG.intervalMs) && SLIDESHOW_CONFIG.intervalMs > 0) {
+    return SLIDESHOW_CONFIG.intervalMs;
+  }
+  return Math.max(
     SLIDESHOW_CONFIG.minInterval,
     totalCards * SLIDESHOW_CONFIG.basePerCard
   );
-  return { fullCycle };
 }
 
 function createSlideController(folder, qty, desk, mob, card, startDelay, intervalMs) {
@@ -868,7 +871,7 @@ function setupSlides() {
   if (!cards.length) return;
 
   const total = TOTAL_WEB_COUNT || cards.length || 1;
-  const { fullCycle } = calculateTimings(total);
+  const fullCycle = getIntervalMs(total);
 
   intersectionObserver = new IntersectionObserver(
     (entries) => {
