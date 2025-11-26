@@ -280,7 +280,7 @@ html[data-theme="light"] {
   --bg: #f7f7f7;
   --text: #333333;
   --accent: #fcc61d;
-  --clouds: #c59560;
+  --clouds: #9ca78a;
 }
 
 html[data-theme="dark"] {
@@ -299,6 +299,7 @@ body {
   margin: 0;
   padding: 20px;
   font-family: "Inknut Antiqua", serif;
+  font-weight: 400;
   background-color: var(--bg);
   color: var(--text);
   overflow-x: hidden;
@@ -317,6 +318,12 @@ body {
 }
 
 /* 5) Tipografía y secciones */
+h1,
+h2,
+h3 {
+  font-weight: 700;
+}
+
 header h1 {
   font-size: 2.5em;
   margin-bottom: 0.3em;
