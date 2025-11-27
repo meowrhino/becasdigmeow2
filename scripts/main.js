@@ -486,8 +486,9 @@ function appendSafeRichText(target, html = "") {
   });
 }
 
-const MULTI_IMAGE_EXTENSIONS = ["jpeg", "jpg", "png", "webp"];
-const SINGLE_IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp"];
+// Priorizar webp para probar conversiones ligeras, con fallback a formatos existentes
+const MULTI_IMAGE_EXTENSIONS = ["webp", "jpeg", "jpg", "png"];
+const SINGLE_IMAGE_EXTENSIONS = ["webp", "png", "jpg", "jpeg"];
 const imageExtensionCache = new Map();
 
 function getImageCacheKey(folder, device, qty) {

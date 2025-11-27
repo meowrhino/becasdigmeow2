@@ -648,8 +648,8 @@ nav button.active {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
 
-@media (max-width: 600px) {
-  /* Invertir layout: móvil grande, desktop pequeño */
+/* @media (max-width: 600px) {
+  Invertir layout: móvil grande, desktop pequeño (desactivado para probar vista unificada)
   .img-movil {
     position: relative;
     width: 100%;
@@ -676,7 +676,7 @@ nav button.active {
     left: auto;
     right: auto;
   }
-}
+} */
 
 .web-preview.movil-izquierda .img-movil {
   left: 5%;
@@ -1047,6 +1047,21 @@ a {
 .img-ordenador,
 .img-movil {
   cursor: pointer;
+}
+
+@media (max-width: 600px) {
+  /* Mantener layout pero reducir la miniatura móvil para que no domine en pantallas pequeñas */
+  .img-movil {
+    width: min(32vw, 100px);
+    bottom: -24px;
+    /* left: 50%; */
+    transform: translateX(-35%);
+  }
+
+  /* Opcional: asegurar que el contenedor no se desborda */
+  .web-preview {
+    max-width: 95vw;
+  }
 }
 
 @media (max-width: 600px) {
