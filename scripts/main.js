@@ -251,13 +251,13 @@ const websRealizadas = [
     movilPos: "left",
     imgQuantity: 5,
     textoES:
-      "portfolio online y archivo de la fotógrafa <a target='_blank' href='https://meowrhino.github.io/andreacarilla/'>andrea carilla</a>. La página principal se divide en una galería y una nube de links con opciones de filtrado por categorías.",
+      "portfolio online y archivo de la fotógrafa <a target='_blank' href='https://meowrhino.github.io/andreacarilla/'>andrea</a>. La página principal se divide en una galería y una nube de links con opciones de filtrado por categorías.",
     textoEN:
-      "online portfolio and archive of photographer <a target='_blank' href='https://meowrhino.github.io/andreacarilla/'>andrea carilla</a>. The homepage combines a gallery with a link cloud and category filters.",
+      "online portfolio and archive of photographer <a target='_blank' href='https://meowrhino.github.io/andreacarilla/'>andrea</a>. The homepage combines a gallery with a link cloud and category filters.",
     textoFR:
-      "portfolio en ligne et archive de la photographe <a target='_blank' href='https://meowrhino.github.io/andreacarilla/'>andrea carilla</a>. La page d’accueil mêle une galerie et un nuage de liens avec des filtres par catégorie.",
+      "portfolio en ligne et archive de la photographe <a target='_blank' href='https://meowrhino.github.io/andreacarilla/'>andrea</a>. La page d’accueil mêle une galerie et un nuage de liens avec des filtres par catégorie.",
     textoCAT:
-      "portfolio en línia i arxiu de la fotògrafa <a target='_blank' href='https://meowrhino.github.io/andreacarilla/'>andrea carilla</a>. La portada combina una galeria i un núvol d’enllaços amb filtres per categories.",
+      "portfolio en línia i arxiu de la fotògrafa <a target='_blank' href='https://meowrhino.github.io/andreacarilla/'>andrea</a>. La portada combina una galeria i un núvol d’enllaços amb filtres per categories.",
   },
 
   {
@@ -267,7 +267,7 @@ const websRealizadas = [
     movilPos: "left",
     imgQuantity: 5,
     textoES:
-      "portfolio de diseño gráfico de <a target='_blank' href='https://meowrhino.github.io/andreacarilla/'>miranda</a>. Se compone de un scroll y menú de navegación responsive con idiomas y colores según proyecto.",
+      "portfolio de diseño gráfico de <a target='_blank' href='https://mirandaperezhita.com/'>miranda</a>. Se compone de un scroll y menú de navegación responsive con idiomas y colores según proyecto.",
     textoEN:
       "",
     textoFR:
