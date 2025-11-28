@@ -269,11 +269,11 @@ const websRealizadas = [
     textoES:
       "portfolio de diseño gráfico de <a target='_blank' href='https://mirandaperezhita.com/'>miranda</a>. Se compone de un scroll y menú de navegación responsive con idiomas y colores según proyecto.",
     textoEN:
-      "",
+      "graphic design portfolio of <a target='_blank' href='https://mirandaperezhita.com/'>miranda</a>. It features a scroll-based layout and a responsive navigation menu with language options and project-specific color themes.",
     textoFR:
-      "",
+      "portfolio de design graphique de <a target='_blank' href='https://mirandaperezhita.com/'>miranda</a>. Il propose une page à défilement continu et un menu de navigation responsive avec gestion des langues et des couleurs selon le projet.",
     textoCAT:
-      "",
+      "portfolio de disseny gràfic de <a target='_blank' href='https://mirandaperezhita.com/'>miranda</a>. Presenta un scroll i un menú de navegació responsive amb idiomes i colors segons cada projecte.",
   },
 
   {
