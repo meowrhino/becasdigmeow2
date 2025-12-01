@@ -431,6 +431,8 @@ const textosMain = {
       "porque no quieres vivir de alquiler dentro de las plataformas; porque crees en el código abierto; porque quieres apoyar la propuesta de una amiga; para recuperar la propiedad de tu identidad en línea; para jugar y explorar espacios nuevos; para escapar de cuadrículas, vigilancia y censura; para no quedarte sin cuenta de un día para otro; para dejar de pagar suscripciones que no te hacen falta; porque piensas demasiado en la tecnocracia/tecnofeudalismo…",
     whyP2:
       "internet nació como bien común y la queremos descentralizada, local, compartida y —sobre todo— divertida.",
+    ctaText: "¡quiero una web!",
+    ctaSubject: "¡quiero una web!",
   },
   EN: {
     mainTitle: "digitization grant <br> meowrhino",
@@ -439,6 +441,8 @@ const textosMain = {
       "because you don’t want to live “renting” inside platforms; because you believe in open‑source; because you want to support a friend’s proposal; to reclaim ownership of your online identity; to play and explore new spaces; to escape grids, surveillance and censorship; to not lose your account overnight; to stop paying subscriptions you don’t need; because you think too much about technocracy/techno‑feudalism…",
     whyP2:
       "the internet was born as a commons, and we want it decentralized, local, shared and—above all—fun.",
+    ctaText: "i want a website!",
+    ctaSubject: "i want a website!",
   },
   FR: {
     mainTitle: "bourse de numérisation <br> meowrhino",
@@ -447,6 +451,8 @@ const textosMain = {
       "parce que tu ne veux plus vivre en location dans les plateformes ; parce que tu crois au logiciel libre ; parce que tu veux soutenir la proposition d’une amie ; pour reprendre la propriété de ton identité en ligne ; pour jouer et explorer de nouveaux espaces ; pour échapper aux grilles, à la surveillance et à la censure ; pour ne pas te retrouver sans compte du jour au lendemain ; pour arrêter de payer des abonnements inutiles ; parce que tu penses trop à la technocratie/techno‑féodalisme…",
     whyP2:
       "internet est né comme un bien commun et nous le voulons décentralisé, local, partagé et —surtout— ludique.",
+    ctaText: "je veux un site web!",
+    ctaSubject: "je veux un site web!",
   },
   CAT: {
     mainTitle: "beca de digitalització <br> meowrhino",
@@ -455,6 +461,8 @@ const textosMain = {
       "perquè vols deixar de viure de lloguer dins les plataformes; perquè creus en el codi obert; perquè vols donar suport a la proposta d’una amiga; per recuperar la propietat de la teva identitat en línia; per jugar i explorar espais nous; per escapar de graelles, vigilància i censura; per no quedar-te sense compte d’un dia per l’altre; per deixar de pagar subscripcions que no et calen; perquè pensas massa en la tecnocracia/tecnofeudalisme”...",
     whyP2:
       "internet va néixer com un bé comú i la volem descentralitzada, local, compartida i —sobretot— divertida.",
+    ctaText: "vull una web!",
+    ctaSubject: "vull una web!",
   },
 };
 
@@ -1079,6 +1087,13 @@ function applyLanguage(lang) {
   document.querySelector("#whyTitle").textContent = t.whyTitle;
   document.querySelector("#whyP1").textContent = t.whyP1;
   document.querySelector("#whyP2").textContent = t.whyP2;
+  const ctaBtn = document.querySelector(".cta-button");
+  if (ctaBtn) {
+    ctaBtn.textContent = t.ctaText;
+    ctaBtn.href = `mailto:hola@meowrhino.studio?subject=${encodeURIComponent(
+      t.ctaSubject || t.ctaText
+    )}`;
+  }
   crearGaleria(websRealizadas, lang);
   setupSlides();
   const btn = document.querySelector("#toggleLang");
