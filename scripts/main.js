@@ -425,7 +425,6 @@ const LANGS = ["ES", "EN", "FR", "CAT"];
 
 const textosMain = {
   ES: {
-    mainTitle: "beca de digitalización <br> meowrhino",
     whyTitle: "por qué una web propia?",
     whyP1:
       "porque no quieres vivir de alquiler dentro de las plataformas; porque crees en el código abierto; porque quieres apoyar la propuesta de una amiga; para recuperar la propiedad de tu identidad en línea; para jugar y explorar espacios nuevos; para escapar de cuadrículas, vigilancia y censura; para no quedarte sin cuenta de un día para otro; para dejar de pagar suscripciones que no te hacen falta; porque piensas demasiado en la tecnocracia/tecnofeudalismo…",
@@ -435,7 +434,6 @@ const textosMain = {
     ctaSubject: "¡quiero una web!",
   },
   EN: {
-    mainTitle: "digitization grant <br> meowrhino",
     whyTitle: "why a website of your own?",
     whyP1:
       "because you don’t want to live “renting” inside platforms; because you believe in open‑source; because you want to support a friend’s proposal; to reclaim ownership of your online identity; to play and explore new spaces; to escape grids, surveillance and censorship; to not lose your account overnight; to stop paying subscriptions you don’t need; because you think too much about technocracy/techno‑feudalism…",
@@ -445,7 +443,6 @@ const textosMain = {
     ctaSubject: "i want a website!",
   },
   FR: {
-    mainTitle: "bourse de numérisation <br> meowrhino",
     whyTitle: "pourquoi un site à toi ?",
     whyP1:
       "parce que tu ne veux plus vivre en location dans les plateformes ; parce que tu crois au logiciel libre ; parce que tu veux soutenir la proposition d’une amie ; pour reprendre la propriété de ton identité en ligne ; pour jouer et explorer de nouveaux espaces ; pour échapper aux grilles, à la surveillance et à la censure ; pour ne pas te retrouver sans compte du jour au lendemain ; pour arrêter de payer des abonnements inutiles ; parce que tu penses trop à la technocratie/techno‑féodalisme…",
@@ -455,7 +452,6 @@ const textosMain = {
     ctaSubject: "je veux un site web!",
   },
   CAT: {
-    mainTitle: "beca de digitalització <br> meowrhino",
     whyTitle: "per què una web pròpia?",
     whyP1:
       "perquè vols deixar de viure de lloguer dins les plataformes; perquè creus en el codi obert; perquè vols donar suport a la proposta d’una amiga; per recuperar la propietat de la teva identitat en línia; per jugar i explorar espais nous; per escapar de graelles, vigilància i censura; per no quedar-te sense compte d’un dia per l’altre; per deixar de pagar subscripcions que no et calen; perquè pensas massa en la tecnocracia/tecnofeudalisme”...",
@@ -1083,7 +1079,6 @@ function applyLanguage(lang) {
   };
 
   document.title = titles[lang] || titles.ES;
-  document.querySelector("#mainTitle").innerHTML = t.mainTitle;
   document.querySelector("#whyTitle").textContent = t.whyTitle;
   document.querySelector("#whyP1").textContent = t.whyP1;
   document.querySelector("#whyP2").textContent = t.whyP2;
