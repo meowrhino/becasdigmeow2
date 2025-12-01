@@ -20,7 +20,7 @@
 
     const count = isMobile
       ? Math.floor(randomBetween(20, 35))
-      : Math.floor(randomBetween(50, 90));
+      : Math.floor(randomBetween(50, 120));
 
     return {
       count,

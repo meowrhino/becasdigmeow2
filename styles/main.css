@@ -383,7 +383,7 @@ ul {
   display: inline-block;
   text-align: center;
   padding: 40px 80px;
-  margin: 4rem auto 2rem;
+  margin: 4rem auto 5rem;
   z-index: 1000;
 }
 
@@ -577,6 +577,7 @@ nav button.active {
     align-items: center;
     min-height: 220px;
     padding-inline: 18px;
+    margin: 4rem auto 2rem;
   }
 
   .header-cloud::before {
@@ -850,7 +851,7 @@ a {
   align-items: center;
   gap: 8px;
   z-index: 10;
-  opacity: 1;  /* Siempre visibles */
+  opacity: 1; /* Siempre visibles */
 }
 
 .slideshow-controls .controls-buttons {
